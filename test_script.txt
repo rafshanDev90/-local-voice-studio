@@ -1,0 +1,5 @@
+Welcome to the future of voice synthesis. This is a test script for our voice agent. It uses Kokoro ONNX for fast and natural text-to-speech generation.
+
+How does it work? First, we split the text into natural segments. Then we send each segment to the TTS engine. The result is a seamless audio file.
+
+Important: make sure to download the model files before running the server. The models are not included in the git repository due to their large size.

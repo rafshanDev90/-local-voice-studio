@@ -1,0 +1,31 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+*.key
+secrets*
+
+# Model files (downloaded separately)
+models/
+*.onnx
+*.bin
+*.npy
+*.safetensors
+
+# OpenFugu artifacts (fetched by their script)
+OpenFugu/artifacts/
+OpenFugu/*.npy
+OpenFugu/results/*.out
+OpenFugu/*.log
+
+# Temp audio output
+*.wav
+*.mp3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
