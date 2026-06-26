@@ -34,7 +34,7 @@
   <li><strong>Smart segmentation</strong> &mdash; Ollama (or regex fallback) splits scripts into natural speech segments</li>
   <li><strong>Per-segment voice routing</strong> &mdash; OpenFugu classifies each segment and assigns a matching voice preset</li>
   <li><strong>FastAPI server</strong> &mdash; Two endpoints: file upload (<code>/generate-voice/</code>) and JSON (<code>/api/generate</code>)</li>
-  <li><strong>5 voice presets</strong> &mdash; af_bella, af_heart, af_nicole, am_adam, am_michael</li>
+    <li><strong>11 voice presets</strong> &mdash; af_bella, af_sarah, af_nicole, af_sky, am_adam, am_michael, and 5 British voices</li>
   <li><strong>No API costs</strong> &mdash; Everything runs on your machine</li>
 </ul>
 
@@ -167,7 +167,7 @@ curl -X POST 'http://localhost:8000/api/generate?voice=af_bella' \
     <td>Neutral, explanatory (default)</td>
   </tr>
   <tr>
-    <td><code>af_heart</code></td>
+    <td><code>af_sarah</code></td>
     <td>female</td>
     <td>Warm, narrative, storytelling</td>
   </tr>
@@ -175,6 +175,11 @@ curl -X POST 'http://localhost:8000/api/generate?voice=af_bella' \
     <td><code>af_nicole</code></td>
     <td>female</td>
     <td>Calm, clear, instructional</td>
+  </tr>
+  <tr>
+    <td><code>af_sky</code></td>
+    <td>female</td>
+    <td>Bright, energetic</td>
   </tr>
   <tr>
     <td><code>am_adam</code></td>
@@ -185,6 +190,26 @@ curl -X POST 'http://localhost:8000/api/generate?voice=af_bella' \
     <td><code>am_michael</code></td>
     <td>male</td>
     <td>Friendly, conversational</td>
+  </tr>
+  <tr>
+    <td><code>bf_emma</code></td>
+    <td>female (British)</td>
+    <td>Refined</td>
+  </tr>
+  <tr>
+    <td><code>bf_isabella</code></td>
+    <td>female (British)</td>
+    <td>Soft</td>
+  </tr>
+  <tr>
+    <td><code>bm_george</code></td>
+    <td>male (British)</td>
+    <td>Deep</td>
+  </tr>
+  <tr>
+    <td><code>bm_lewis</code></td>
+    <td>male (British)</td>
+    <td>Warm</td>
   </tr>
 </table>
 

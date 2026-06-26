@@ -82,10 +82,15 @@ curl -X POST 'http://localhost:8000/api/generate?voice=af_bella' \
 | Preset | Gender | Description |
 |--------|--------|-------------|
 | `af_bella` | female | default, neutral |
-| `af_heart` | female | warm, expressive |
+| `af_sarah` | female | warm, expressive |
 | `af_nicole` | female | calm, clear |
+| `af_sky` | female | bright, energetic |
 | `am_adam` | male | authoritative |
 | `am_michael` | male | friendly |
+| `bf_emma` | female (British) | refined, British accent |
+| `bf_isabella` | female (British) | soft, British accent |
+| `bm_george` | male (British) | deep, British accent |
+| `bm_lewis` | male (British) | warm, British accent |
 
 ## Audio Format
 

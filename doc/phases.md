@@ -24,10 +24,12 @@
 
 - [x] `orchestrator.py` — wraps `FuguRouter` with graceful fallback
 - [x] 7 `agent_id → voice_preset` mappings defined
-- [x] Keyword-based fallback routing (questions → af_bella, urgency → am_adam, etc.)
+- [x] Keyword-based fallback routing (questions → af_bella, urgency → am_adam, narrative → af_sarah)
 - [x] Integrated into `app.py`: `use_orchestrator=true` enables per-segment voice selection
-- [ ] Download Qwen3-0.6B + `model_iter_60.npy` via OpenFugu's fetch script
-- [ ] Verify: same script gets varied voice presets across segments
+- [x] Qwen3-0.6B backbone downloaded
+- [x] `model_iter_60.npy` built from `router_head.safetensors`
+- [x] Verified: `use_orchestrator=true` returns valid WAV with varied voice presets
+- [~] Full FuguRouter ML routing — blocked on torch installation (CUDA libs missing)
 
 ## Phase 3 — OpenFugu Coordinator Mode
 

@@ -6,12 +6,12 @@ SILENCE_GAP = 0.3
 
 VOICE_PRESETS = [
     "af_bella",
-    "af_heart",
+    "af_sarah",
     "af_nicole",
     "am_adam",
     "am_michael",
+    "af_sky",
     "af_bella",
-    "af_heart",
 ]
 
 class TTSEngine:
