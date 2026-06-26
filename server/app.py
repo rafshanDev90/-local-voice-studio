@@ -1,10 +1,9 @@
 import tempfile
-import numpy as np
 import soundfile as sf
 from fastapi import FastAPI, UploadFile, File, Query, Body, HTTPException
 from fastapi.responses import FileResponse
 
-from server.tts_engine import TTSEngine, DEFAULT_SAMPLE_RATE
+from server.tts_engine import TTSEngine
 from server.optimizer import optimize_script
 
 app = FastAPI(title="Voice Agent")
@@ -45,19 +44,8 @@ async def generate_voice(
     segments = optimize_script(text)
 
     if use_orchestrator and router:
-        routed = router.route_segments(segments)
-        audio_parts = []
-        sample_rate = DEFAULT_SAMPLE_RATE
-        silence = None
-        for seg, voice in routed:
-            samples, sr = engine.generate_long([seg], voice=voice, speed=speed)
-            sample_rate = sr
-            if len(audio_parts) > 0:
-                if silence is None:
-                    silence = _build_silence(sample_rate)
-                audio_parts.append(silence)
-            audio_parts.append(samples)
-        audio = np.concatenate(audio_parts) if len(audio_parts) > 1 else audio_parts[0]
+        routes = router.route_segments(segments)
+        audio, sample_rate = engine.generate_routed(segments, routes)
     else:
         audio, sample_rate = engine.generate_long(segments, voice=voice_preset, speed=speed)
 
@@ -78,19 +66,8 @@ async def generate_json(
     segments = optimize_script(text)
 
     if use_orchestrator and router:
-        routed = router.route_segments(segments)
-        audio_parts = []
-        sample_rate = DEFAULT_SAMPLE_RATE
-        silence = None
-        for seg, v in routed:
-            samples, sr = engine.generate_long([seg], voice=v, speed=speed)
-            sample_rate = sr
-            if len(audio_parts) > 0:
-                if silence is None:
-                    silence = _build_silence(sample_rate)
-                audio_parts.append(silence)
-            audio_parts.append(samples)
-        audio = np.concatenate(audio_parts) if len(audio_parts) > 1 else audio_parts[0]
+        routes = router.route_segments(segments)
+        audio, sample_rate = engine.generate_routed(segments, routes)
     else:
         audio, sample_rate = engine.generate_long(segments, voice=voice, speed=speed)
 
@@ -98,5 +75,3 @@ async def generate_json(
     sf.write(tmp.name, audio, sample_rate)
     return FileResponse(tmp.name, media_type="audio/wav", filename="output.wav")
 
-def _build_silence(sr: int, duration: float = 0.3) -> np.ndarray:
-    return np.zeros(int(sr * duration), dtype=np.float32)

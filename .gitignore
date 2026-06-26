@@ -1,23 +1,8 @@
-__pycache__/
-*.pyc
 .venv/
 venv/
 .env
 *.key
 secrets*
-
-# Model files (downloaded separately)
-models/
-*.onnx
-*.bin
-*.npy
-*.safetensors
-
-# OpenFugu artifacts (fetched by their script)
-OpenFugu/artifacts/
-OpenFugu/*.npy
-OpenFugu/results/*.out
-OpenFugu/*.log
 
 # Temp audio output
 *.wav
@@ -29,3 +14,11 @@ OpenFugu/*.log
 *.swp
 *.swo
 
+# Client
+client/node_modules
+client/.next/
+client/out/
+client/prisma/db.sqlite
+
+# Client env
+client/.env

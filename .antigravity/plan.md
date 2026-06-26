@@ -61,21 +61,25 @@ voice-agent/
 ├── server/                   # FastAPI server package (`python -m server`)
 │   ├── __init__.py
 │   ├── __main__.py           # Entry point (uvicorn.run)
-│   ├── app.py                # FastAPI app, routes, static mounts
+│   ├── app.py                # FastAPI app, routes
 │   ├── tts_engine.py         # Kokoro TTS wrapper
 │   ├── optimizer.py          # Script optimization (Ollama / sentence split)
-│   └── orchestrator.py       # OpenFugu integration (Phase 2+)
-├── youtube.py                # YouTube caption fetcher (Phase 4)
-├── requirements.txt          # Python dependencies
-├── .gitignore                # Ignore models, artifacts, __pycache__
-├── scripts/
-│   ├── download_models.sh    # Download Kokoro ONNX models
-│   └── serve.sh              # Start the server
-├── models/                   # TTS model files (gitignored)
-├── OpenFugu/                 # Cloned OpenFugu repo (Phase 2+)
-└── .antigravity/
-    ├── plan.md               # This file
-    └── rules.md              # Project rules & conventions
+│   ├── orchestrator.py       # Voice routing (keyword-based)
+│   ├── models/               # Kokoro ONNX model files (gitignored)
+│   │   ├── kokoro-v0_19.onnx
+│   │   └── voices.bin
+│   ├── scripts/
+│   │   ├── download_models.sh
+│   │   └── serve.sh
+│   ├── requirements.txt
+│   └── .gitignore
+├── client/                   # Next.js frontend
+├── doc/
+├── .antigravity/
+│   ├── plan.md
+│   └── rules.md
+├── .gitignore
+└── README.md
 ```
 
 ## Key Design Decisions
@@ -96,9 +100,6 @@ fastapi, uvicorn, soundfile, numpy, kokoro-onnx
 
 # LLM script optimization
 httpx (for Ollama API calls)
-
-# OpenFugu integration (Phase 2+)
-torch>=2.4, transformers>=4.52, numpy (via OpenFugu)
 
 # YouTube (Phase 4)
 yt-dlp
