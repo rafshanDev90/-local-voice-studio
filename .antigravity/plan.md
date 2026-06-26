@@ -73,6 +73,7 @@ voice-agent/
 │   │   └── serve.sh
 │   ├── requirements.txt
 │   └── .gitignore
+├── OpenFugu/                 # Cloned OpenFugu repo (Phase 2 classifier)
 ├── client/                   # Next.js frontend
 ├── doc/
 ├── .antigravity/

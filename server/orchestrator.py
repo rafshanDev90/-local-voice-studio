@@ -1,3 +1,5 @@
+import os
+
 AGENT_VOICE_MAP: dict[str, str] = {
     "agent_0": "af_bella",
     "agent_1": "af_sarah",
@@ -19,9 +21,35 @@ ROUTE_PROFILES: dict[str, tuple[float, float]] = {
     "af_nicole": (1.0, 1.0),
 }
 
+FUGU_MODEL_DIR = os.environ.get("FUGU_MODEL", "/home/failer/.cache/huggingface/hub/models--Qwen--Qwen3-0.6B/snapshots/c1899de289a04d12100db370d81485cdf75e47ca")
+FUGU_VECTOR = os.environ.get("FUGU_VECTOR", "OpenFugu/artifacts/model_iter_60.npy")
+
 class VoiceRouter:
+    def __init__(self):
+        self._router = None
+        self._available = False
+        self._try_init_fugu()
+
+    def _try_init_fugu(self):
+        try:
+            from OpenFugu.openfugu.mini import FuguRouter
+            self._router = FuguRouter(FUGU_MODEL_DIR, FUGU_VECTOR)
+            self._available = True
+        except Exception:
+            self._available = False
+
     def route(self, text: str) -> tuple[str, float, float]:
-        voice = self._keyword_fallback(text)
+        if self._available and self._router:
+            try:
+                result = self._router.route(
+                    [{"role": "user", "content": text}], sample=False
+                )
+                agent_id = result["agent_id"]
+                voice = AGENT_VOICE_MAP.get(f"agent_{agent_id}", FALLBACK_VOICE)
+            except Exception:
+                voice = self._keyword_fallback(text)
+        else:
+            voice = self._keyword_fallback(text)
         speed, volume = ROUTE_PROFILES.get(voice, (1.0, 1.0))
         return (voice, speed, volume)
 

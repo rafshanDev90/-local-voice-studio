@@ -1,5 +1,7 @@
-Welcome to the future of voice synthesis. This is a test script for our voice agent. It uses Kokoro ONNX for fast and natural text-to-speech generation.
+Welcome to the future of voice synthesis. This is a test script for our voice agent. It uses Kokoro ONNX for fast, natural text-to-speech generation.
 
-How does it work? First, we split the text into natural segments. Then we send each segment to the TTS engine. The result is a seamless audio file.
+Phase 2 is now complete. We have integrated the OpenFugu FuguRouter classifier. This means every sentence is routed to the perfect voice. A question gets a bright, fast voice. An urgent message gets a deep, loud voice. A story gets a soft, slow voice.
 
-Important: make sure to download the model files before running the server. The models are not included in the git repository due to their large size.
+How does it work? First, the text is split into natural segments. Each segment is analyzed by the FuguRouter. It picks the best agent voice and applies emotion-aware speed and volume profiles. Then the TTS engine generates audio with punctuation-based pauses and emotion tags. The result is a dynamic, seamless audio file.
+
+Important: make sure to download the model files before running the server. The models are not included in the git repository due to their large size. Voice profiles include eleven presets across American and British male and female voices.

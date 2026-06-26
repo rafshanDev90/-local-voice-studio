@@ -28,8 +28,8 @@
 - [x] Integrated into `app.py`: `use_orchestrator=true` enables per-segment voice selection
 - [x] Qwen3-0.6B backbone downloaded
 - [x] `model_iter_60.npy` built from `router_head.safetensors`
-- [x] Verified: `use_orchestrator=true` returns valid WAV with varied voice presets
-- [~] Full FuguRouter ML routing — blocked on torch installation (CUDA libs missing)
+- [x] FuguRouter loads and routes segments (CPU, ~28s cold start)
+- [x] Verified: `use_orchestrator=true` returns valid WAV with varied voice presets + profiles
 
 ## Phase 3 — OpenFugu Coordinator Mode
 
