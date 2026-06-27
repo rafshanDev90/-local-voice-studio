@@ -8,6 +8,10 @@ kokoro-onnx==0.4.3
 # LLM script optimization
 httpx==0.28.1
 
+# MongoDB
+motor==3.7.1
+redis==8.0.1
+
 # OpenFugu integration (Phase 2+)
 # torch>=2.4.0
 # transformers>=4.52.0
