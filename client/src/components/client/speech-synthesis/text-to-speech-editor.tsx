@@ -37,29 +37,35 @@ export function TextToSpeechEditor({
 
   const selectedLanguage = useVoiceStore((s) => s.selectedLanguage);
   const setSelectedLanguage = useVoiceStore((s) => s.setSelectedLanguage);
-  const getSelectedVoice = useVoiceStore((s) => s.getSelectedVoice);
+  const selectedVoice = useVoiceStore((s) => s.selectedVoices[service]);
   const getVoices = useVoiceStore((s) => s.getVoices);
 
   const { playAudio } = useAudioStore();
 
-  const selectedVoice = getSelectedVoice(service);
   const availableVoices = getVoices(service, selectedLanguage);
+
+  const audioUrlRef = useRef<string | null>(null);
+  useEffect(() => {
+    audioUrlRef.current = audioUrl;
+  }, [audioUrl]);
 
   // Reset audio when text changes
   useEffect(() => {
     setAudioBlob(null);
-    if (audioUrl) {
-      URL.revokeObjectURL(audioUrl);
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
       setAudioUrl(null);
+      audioUrlRef.current = null;
     }
-  }, [textContent, audioUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [textContent]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (audioUrl) URL.revokeObjectURL(audioUrl);
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
     };
-  }, [audioUrl]);
+  }, []);
 
   const handleDownload = useCallback(() => {
     if (!audioBlob || !audioUrl) return;
@@ -151,60 +157,82 @@ export function TextToSpeechEditor({
   };
 
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col rounded-xl border border-gray-200 bg-[#f7f7f4] shadow-sm">
       {/* Language selector */}
-      <div className="mb-3 flex items-center gap-2">
-        <IoLanguageOutline className="text-gray-500" />
-        <select
-          value={selectedLanguage}
-          onChange={(e) => setSelectedLanguage(e.target.value)}
-          className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
-        >
-          {LANGUAGES.map((lang) => (
-            <option key={lang.code} value={lang.code}>
-              {lang.label}
-            </option>
-          ))}
-        </select>
-        {selectedVoice && (
-          <span className="ml-auto text-xs text-gray-400">
-            {availableVoices.length} voice{availableVoices.length !== 1 ? "s" : ""} available
-          </span>
-        )}
+      <div className="flex flex-wrap items-center gap-3 border-b border-gray-200 bg-white px-4 py-3 md:px-5">
+        <div className="flex min-w-0 items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+          <IoLanguageOutline className="h-4 w-4 flex-shrink-0 text-gray-500" />
+          <select
+            value={selectedLanguage}
+            onChange={(e) => setSelectedLanguage(e.target.value)}
+            className="max-w-[180px] bg-transparent text-sm font-medium text-gray-900 outline-none"
+          >
+            {LANGUAGES.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 text-xs text-gray-500">
+          {selectedVoice && (
+            <span className="truncate rounded-full border border-gray-200 bg-white px-3 py-1.5">
+              {selectedVoice.name}
+            </span>
+          )}
+          {selectedVoice && (
+            <span className="whitespace-nowrap rounded-full bg-gray-900 px-3 py-1.5 text-white">
+              {availableVoices.length} voice{availableVoices.length !== 1 ? "s" : ""} available
+            </span>
+          )}
+        </div>
       </div>
 
-      <textarea
-        value={textContent}
-        onChange={(e) => setTextContent(e.target.value)}
-        placeholder={activePlaceholder}
-        disabled={loading}
-        className="w-full flex-grow resize-none rounded-lg bg-white p-4 placeholder:font-light placeholder:text-gray-500 focus:border-none focus:outline-none focus:ring-0"
-      />
+      <div className="relative min-h-[320px] flex-1 px-3 py-3 md:px-5 md:py-5">
+        <textarea
+          value={textContent}
+          onChange={(e) => setTextContent(e.target.value)}
+          placeholder={activePlaceholder}
+          disabled={loading}
+          className="h-full min-h-[320px] w-full resize-none rounded-xl border border-gray-200 bg-white p-5 text-base leading-7 text-gray-950 shadow-sm outline-none transition placeholder:font-light placeholder:text-gray-400 focus:border-gray-300 focus:ring-4 focus:ring-gray-900/5 disabled:cursor-wait disabled:bg-gray-50 md:p-6"
+        />
+      </div>
 
       {/* Generated audio player */}
       {audioUrl && (
-        <div className="mt-3 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <audio
-            ref={audioRef}
-            src={audioUrl}
-            controls
-            className="h-9 flex-1"
-          />
+        <div className="mx-3 mb-3 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm md:mx-5 md:mb-5 md:flex-row md:items-center">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-950 text-white">
+              <IoMicOutline className="h-4 w-4" />
+            </div>
+            <audio
+              ref={audioRef}
+              src={audioUrl}
+              controls
+              className="h-9 min-w-0 flex-1"
+            />
+          </div>
           <button
             onClick={handleDownload}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-100"
+            className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 md:w-10 md:px-0"
             title="Download WAV"
           >
             <GoDownload className="h-4 w-4" />
+            <span className="md:hidden">Download</span>
           </button>
         </div>
       )}
 
-      <div className="mt-4 px-0 md:px-4">
+      <div className="border-t border-gray-200 bg-white px-4 py-4 md:px-5">
         {textContent.length === 0 ? (
-          <div className="mt-auto">
-            <p className="mb-2 text-sm text-gray-500">Get started with</p>
-            <div className="flex flex-wrap gap-2">
+          <div>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-gray-900">Get started with</p>
+              <p className="hidden text-xs text-gray-400 sm:block">
+                Hover to preview, click to insert
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
               {[
                 { text: "Narrate a story", icon: <IoBookOutline /> },
                 { text: "Tell a silly joke", icon: <IoHappyOutline /> },
@@ -217,7 +245,7 @@ export function TextToSpeechEditor({
               ].map(({ text, icon }) => (
                 <button
                   key={text}
-                  className="flex items-center rounded-lg border border-gray-200 bg-white p-2 text-xs hover:bg-gray-50"
+                  className="flex min-h-11 items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-xs font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-950"
                   onMouseEnter={() => handleButtonHover(text)}
                   onMouseLeave={() =>
                     setActivePlaceholder(
@@ -226,7 +254,9 @@ export function TextToSpeechEditor({
                   }
                   onClick={() => handleButtonClick(text)}
                 >
-                  <span className="mr-2 text-gray-500">{icon}</span>
+                  <span className="mr-2 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-600">
+                    {icon}
+                  </span>
                   {text}
                 </button>
               ))}
@@ -234,6 +264,7 @@ export function TextToSpeechEditor({
           </div>
         ) : (
           <GenerateButton
+            className="rounded-xl border border-gray-200 bg-gray-50 p-3"
             onGenerate={handleGenerate}
             isDisabled={
               textContent.length > 5000 ||
@@ -249,6 +280,6 @@ export function TextToSpeechEditor({
           />
         )}
       </div>
-    </>
+    </div>
   );
 }
