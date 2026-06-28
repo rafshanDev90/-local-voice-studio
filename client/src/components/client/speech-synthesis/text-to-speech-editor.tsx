@@ -44,26 +44,19 @@ export function TextToSpeechEditor({
 
   const availableVoices = getVoices(service, selectedLanguage);
 
-  const audioUrlRef = useRef<string | null>(null);
-  useEffect(() => {
-    audioUrlRef.current = audioUrl;
-  }, [audioUrl]);
+  const blobUrlRef = useRef<string | null>(null);
 
-  // Reset audio when text changes
+  // Hide inline player when text changes (don't revoke blob URL —
+  // Playbar may still reference it via zustand store)
   useEffect(() => {
     setAudioBlob(null);
-    if (audioUrlRef.current) {
-      URL.revokeObjectURL(audioUrlRef.current);
-      setAudioUrl(null);
-      audioUrlRef.current = null;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setAudioUrl(null);
   }, [textContent]);
 
-  // Cleanup on unmount
+  // Cleanup blob URL on unmount
   useEffect(() => {
     return () => {
-      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
     };
   }, []);
 
@@ -107,10 +100,7 @@ export function TextToSpeechEditor({
 
     setLoading(true);
     setAudioBlob(null);
-    if (audioUrl) {
-      URL.revokeObjectURL(audioUrl);
-      setAudioUrl(null);
-    }
+    setAudioUrl(null);
 
     try {
       const result = await generateSpeech({
@@ -119,6 +109,9 @@ export function TextToSpeechEditor({
         languageCode: selectedLanguage === "auto" ? null : selectedLanguage,
         service,
       });
+
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = result.audioUrl;
 
       setAudioUrl(result.audioUrl);
       setAudioBlob(result.blob);
