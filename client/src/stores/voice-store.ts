@@ -21,19 +21,25 @@ export interface Voice {
 export const LANGUAGES: { code: string; label: string }[] = [
   { code: "en-us", label: "English (US)" },
   { code: "en-gb", label: "English (UK)" },
+  { code: "bn-bd", label: "বাংলা (বাংলাদেশ)" },
+  { code: "bn-in", label: "বাংলা (ভারত)" },
 ];
 
 const VOICES: Voice[] = [
-  { id: "af_bella",    name: "Bella",    language: "en-us", gender: "female", gradientColors: GRADIENT_COLORS[0]!, service: "styletts2" },
-  { id: "af_nicole",   name: "Nicole",   language: "en-us", gender: "female", gradientColors: GRADIENT_COLORS[1]!, service: "styletts2" },
-  { id: "af_sarah",    name: "Sarah",    language: "en-us", gender: "female", gradientColors: GRADIENT_COLORS[2]!, service: "styletts2" },
-  { id: "af_sky",      name: "Sky",      language: "en-us", gender: "female", gradientColors: GRADIENT_COLORS[3]!, service: "styletts2" },
-  { id: "am_adam",     name: "Adam",     language: "en-us", gender: "male",   gradientColors: GRADIENT_COLORS[4]!, service: "styletts2" },
-  { id: "am_michael",  name: "Michael",  language: "en-us", gender: "male",   gradientColors: GRADIENT_COLORS[0]!, service: "styletts2" },
-  { id: "bf_emma",     name: "Emma",     language: "en-gb", gender: "female", gradientColors: GRADIENT_COLORS[1]!, service: "styletts2" },
-  { id: "bf_isabella", name: "Isabella", language: "en-gb", gender: "female", gradientColors: GRADIENT_COLORS[2]!, service: "styletts2" },
-  { id: "bm_george",   name: "George",   language: "en-gb", gender: "male",   gradientColors: GRADIENT_COLORS[3]!, service: "styletts2" },
-  { id: "bm_lewis",    name: "Lewis",    language: "en-gb", gender: "male",   gradientColors: GRADIENT_COLORS[4]!, service: "styletts2" },
+  { id: "af_bella",       name: "Bella",     language: "en-us", gender: "female", gradientColors: GRADIENT_COLORS[0]!, service: "styletts2" },
+  { id: "af_nicole",      name: "Nicole",    language: "en-us", gender: "female", gradientColors: GRADIENT_COLORS[1]!, service: "styletts2" },
+  { id: "af_sarah",       name: "Sarah",     language: "en-us", gender: "female", gradientColors: GRADIENT_COLORS[2]!, service: "styletts2" },
+  { id: "af_sky",         name: "Sky",       language: "en-us", gender: "female", gradientColors: GRADIENT_COLORS[3]!, service: "styletts2" },
+  { id: "am_adam",        name: "Adam",      language: "en-us", gender: "male",   gradientColors: GRADIENT_COLORS[4]!, service: "styletts2" },
+  { id: "am_michael",     name: "Michael",   language: "en-us", gender: "male",   gradientColors: GRADIENT_COLORS[0]!, service: "styletts2" },
+  { id: "bf_emma",        name: "Emma",      language: "en-gb", gender: "female", gradientColors: GRADIENT_COLORS[1]!, service: "styletts2" },
+  { id: "bf_isabella",    name: "Isabella",  language: "en-gb", gender: "female", gradientColors: GRADIENT_COLORS[2]!, service: "styletts2" },
+  { id: "bm_george",      name: "George",    language: "en-gb", gender: "male",   gradientColors: GRADIENT_COLORS[3]!, service: "styletts2" },
+  { id: "bm_lewis",       name: "Lewis",     language: "en-gb", gender: "male",   gradientColors: GRADIENT_COLORS[4]!, service: "styletts2" },
+  { id: "bn-bd-nabanita", name: "নবনীতা",   language: "bn-bd", gender: "female", gradientColors: GRADIENT_COLORS[0]!, service: "styletts2" },
+  { id: "bn-bd-pradeep",  name: "প্রদীপ",    language: "bn-bd", gender: "male",   gradientColors: GRADIENT_COLORS[1]!, service: "styletts2" },
+  { id: "bn-in-bashkar",  name: "বাশকার",    language: "bn-in", gender: "male",   gradientColors: GRADIENT_COLORS[2]!, service: "styletts2" },
+  { id: "bn-in-tanishaa", name: "তানিশা",    language: "bn-in", gender: "female", gradientColors: GRADIENT_COLORS[3]!, service: "styletts2" },
 ];
 
 const defaultVoice = VOICES.find((v) => v.id === "af_bella") ?? null;

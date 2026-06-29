@@ -5,7 +5,7 @@ import soundfile as sf
 from fastapi import FastAPI, UploadFile, File, Query, Body, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from server.tts_engine import TTSEngine
+from server.tts_engine import TTSEngine, is_bangla_voice, generate_bangla, detect_language
 from server.optimizer import optimize_script
 from server.database import connect, disconnect, save_voice_history, list_voice_history, get_voice_history_item, delete_voice_history
 
@@ -27,16 +27,20 @@ engine: TTSEngine | None = None
 router = None
 
 VOICES_CATALOG = [
-    {"id": "af_bella",    "name": "Bella",     "language": "en-us", "gender": "female"},
-    {"id": "af_nicole",   "name": "Nicole",    "language": "en-us", "gender": "female"},
-    {"id": "af_sarah",    "name": "Sarah",     "language": "en-us", "gender": "female"},
-    {"id": "af_sky",      "name": "Sky",       "language": "en-us", "gender": "female"},
-    {"id": "am_adam",     "name": "Adam",      "language": "en-us", "gender": "male"},
-    {"id": "am_michael",  "name": "Michael",   "language": "en-us", "gender": "male"},
-    {"id": "bf_emma",     "name": "Emma",      "language": "en-gb", "gender": "female"},
-    {"id": "bf_isabella", "name": "Isabella",  "language": "en-gb", "gender": "female"},
-    {"id": "bm_george",   "name": "George",    "language": "en-gb", "gender": "male"},
-    {"id": "bm_lewis",    "name": "Lewis",     "language": "en-gb", "gender": "male"},
+    {"id": "af_bella",       "name": "Bella",      "language": "en-us", "gender": "female"},
+    {"id": "af_nicole",      "name": "Nicole",     "language": "en-us", "gender": "female"},
+    {"id": "af_sarah",       "name": "Sarah",      "language": "en-us", "gender": "female"},
+    {"id": "af_sky",         "name": "Sky",        "language": "en-us", "gender": "female"},
+    {"id": "am_adam",        "name": "Adam",       "language": "en-us", "gender": "male"},
+    {"id": "am_michael",     "name": "Michael",    "language": "en-us", "gender": "male"},
+    {"id": "bf_emma",        "name": "Emma",       "language": "en-gb", "gender": "female"},
+    {"id": "bf_isabella",    "name": "Isabella",   "language": "en-gb", "gender": "female"},
+    {"id": "bm_george",      "name": "George",     "language": "en-gb", "gender": "male"},
+    {"id": "bm_lewis",       "name": "Lewis",      "language": "en-gb", "gender": "male"},
+    {"id": "bn-bd-nabanita", "name": "Nabanita",   "language": "bn-bd", "gender": "female"},
+    {"id": "bn-bd-pradeep",  "name": "Pradeep",    "language": "bn-bd", "gender": "male"},
+    {"id": "bn-in-bashkar",  "name": "Bashkar",    "language": "bn-in", "gender": "male"},
+    {"id": "bn-in-tanishaa", "name": "Tanishaa",   "language": "bn-in", "gender": "female"},
 ]
 
 VOICE_LANG_MAP: dict[str, str] = {v["id"]: v["language"] for v in VOICES_CATALOG}
@@ -90,7 +94,9 @@ async def generate_voice(
         raise HTTPException(400, "Script is empty")
     _validate_language(voice_preset, language_code)
     segments = optimize_script(text)
-    if use_orchestrator and router:
+    if is_bangla_voice(voice_preset):
+        audio, sample_rate = await generate_bangla(text, voice_preset, speed)
+    elif use_orchestrator and router:
         routes = router.route_segments(segments)
         audio, sample_rate = engine.generate_routed(segments, routes)
     else:
@@ -112,10 +118,20 @@ async def generate_json(
 ):
     if not text.strip():
         raise HTTPException(400, "Text is empty")
+
+    lang = detect_language(text)
+
+    if lang == "bn" and not is_bangla_voice(voice):
+        voice = "bn-bd-nabanita"
+    elif lang == "en" and is_bangla_voice(voice):
+        voice = "af_bella"
+
     _validate_language(voice, language_code)
     segments = optimize_script(text)
     detected = VOICE_LANG_MAP.get(voice, "en-us")
-    if use_orchestrator and router:
+    if is_bangla_voice(voice):
+        audio, sample_rate = await generate_bangla(text, voice, speed)
+    elif use_orchestrator and router:
         routes = router.route_segments(segments)
         audio, sample_rate = engine.generate_routed(segments, routes)
     else:
@@ -186,6 +202,15 @@ async def serve_audio(history_id: str):
     if not os.path.exists(audio_path):
         raise HTTPException(404, "Audio file not found")
     return FileResponse(audio_path, media_type="audio/wav", filename="output.wav")
+
+
+def language_code_to_voice(language_code: str | None) -> str | None:
+    if language_code is None:
+        return None
+    for v in VOICES_CATALOG:
+        if v["language"] == language_code:
+            return v["id"]
+    return None
 
 
 def _validate_language(voice: str, language_code: str | None) -> None:
