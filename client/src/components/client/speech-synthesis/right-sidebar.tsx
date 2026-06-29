@@ -22,7 +22,7 @@ export function SpeechSidebar({
     isMobileScreen,
   } = useUIStore();
 
-  const { speed, stability, styleExaggeration, setSpeed, setStability, setStyleExaggeration } =
+  const { speed, stability, styleExaggeration, setSpeed, setStability, setStyleExaggeration, reset } =
     useAudioConfig();
 
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -54,9 +54,17 @@ export function SpeechSidebar({
                 <VoiceSelector service={service} />
               </div>
               <div className="mb-6 border-t border-gray-100 pt-4">
-                <h2 className="mb-3 text-sm font-medium text-gray-900">
-                  Audio Configuration
-                </h2>
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-sm font-medium text-gray-900">
+                    Audio Configuration
+                  </h2>
+                  <button
+                    onClick={reset}
+                    className="text-[11px] text-gray-400 underline transition hover:text-gray-700"
+                  >
+                    Reset
+                  </button>
+                </div>
                 <AudioSlider
                   label="Speed"
                   value={speed}
@@ -145,9 +153,17 @@ export function SpeechSidebar({
                   <VoiceSelector service={service} />
                 </div>
                 <div className="mb-6 border-t border-gray-100 pt-4">
-                  <h2 className="mb-3 text-sm font-medium text-gray-900">
-                    Audio Configuration
-                  </h2>
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-medium text-gray-900">
+                      Audio Configuration
+                    </h2>
+                    <button
+                      onClick={reset}
+                      className="text-[11px] text-gray-400 underline transition hover:text-gray-700"
+                    >
+                      Reset
+                    </button>
+                  </div>
                   <AudioSlider
                     label="Speed"
                     value={speed}
