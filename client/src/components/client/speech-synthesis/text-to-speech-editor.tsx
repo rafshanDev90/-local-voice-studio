@@ -17,6 +17,7 @@ import { GenerateButton } from "../generate-button";
 import { generateSpeech, LanguageMismatchError } from "~/lib/tts";
 import { useVoiceStore, LANGUAGES } from "~/stores/voice-store";
 import { useAudioStore } from "~/stores/audio-store";
+import { useAudioConfig } from "~/stores/audio-config";
 import toast from "react-hot-toast";
 
 export function TextToSpeechEditor({
@@ -41,6 +42,7 @@ export function TextToSpeechEditor({
   const getVoices = useVoiceStore((s) => s.getVoices);
 
   const { playAudio } = useAudioStore();
+  const { speed, stability, styleExaggeration } = useAudioConfig();
 
   const availableVoices = getVoices(service, selectedLanguage);
 
@@ -106,6 +108,9 @@ export function TextToSpeechEditor({
       const result = await generateSpeech({
         text: textContent,
         voice: selectedVoice.id,
+        speed,
+        stability,
+        styleExaggeration,
         languageCode: selectedLanguage === "auto" ? null : selectedLanguage,
         service,
       });

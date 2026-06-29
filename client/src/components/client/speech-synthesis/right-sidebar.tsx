@@ -4,6 +4,8 @@ import { useUIStore } from "~/stores/ui-store";
 import { ServiceType } from "~/types/services";
 import { VoiceSelector } from "../voice-selector";
 import { HistoryPanel } from "./history-panel";
+import { AudioSlider } from "../audio-slider";
+import { useAudioConfig } from "~/stores/audio-config";
 import { useState } from "react";
 import { IoClose } from "react-icons/io5";
 
@@ -19,6 +21,9 @@ export function SpeechSidebar({
     toggleMobileMenu,
     isMobileScreen,
   } = useUIStore();
+
+  const { speed, stability, styleExaggeration, setSpeed, setStability, setStyleExaggeration } =
+    useAudioConfig();
 
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,9 +48,46 @@ export function SpeechSidebar({
         </div>
         <div className="transition-opacity duration-200">
           {activeTab === "settings" ? (
-            <div className="mb-6">
-              <h2 className="mb-2 text-sm">Voice</h2>
-              <VoiceSelector service={service} />
+            <div>
+              <div className="mb-6">
+                <h2 className="mb-2 text-sm">Voice</h2>
+                <VoiceSelector service={service} />
+              </div>
+              <div className="mb-6 border-t border-gray-100 pt-4">
+                <h2 className="mb-3 text-sm font-medium text-gray-900">
+                  Audio Configuration
+                </h2>
+                <AudioSlider
+                  label="Speed"
+                  value={speed}
+                  min={0.5}
+                  max={2.0}
+                  step={0.1}
+                  leftLabel="Slower"
+                  rightLabel="Faster"
+                  onChange={setSpeed}
+                />
+                <AudioSlider
+                  label="Stability"
+                  value={stability}
+                  min={0.0}
+                  max={1.0}
+                  step={0.1}
+                  leftLabel="More variable"
+                  rightLabel="More stable"
+                  onChange={setStability}
+                />
+                <AudioSlider
+                  label="Style Exaggeration"
+                  value={styleExaggeration}
+                  min={0.0}
+                  max={1.0}
+                  step={0.1}
+                  leftLabel="None"
+                  rightLabel="Exaggerated"
+                  onChange={setStyleExaggeration}
+                />
+              </div>
             </div>
           ) : (
             <HistoryPanel
@@ -97,9 +139,46 @@ export function SpeechSidebar({
           {/* Tab content */}
           <div className="transition-opacity duration-200">
             {activeTab === "settings" ? (
-              <div className="mb-6">
-                <h2 className="mb-2 text-sm">Voice</h2>
-                <VoiceSelector service={service} />
+              <div>
+                <div className="mb-6">
+                  <h2 className="mb-2 text-sm">Voice</h2>
+                  <VoiceSelector service={service} />
+                </div>
+                <div className="mb-6 border-t border-gray-100 pt-4">
+                  <h2 className="mb-3 text-sm font-medium text-gray-900">
+                    Audio Configuration
+                  </h2>
+                  <AudioSlider
+                    label="Speed"
+                    value={speed}
+                    min={0.5}
+                    max={2.0}
+                    step={0.1}
+                    leftLabel="Slower"
+                    rightLabel="Faster"
+                    onChange={setSpeed}
+                  />
+                  <AudioSlider
+                    label="Stability"
+                    value={stability}
+                    min={0.0}
+                    max={1.0}
+                    step={0.1}
+                    leftLabel="More variable"
+                    rightLabel="More stable"
+                    onChange={setStability}
+                  />
+                  <AudioSlider
+                    label="Style Exaggeration"
+                    value={styleExaggeration}
+                    min={0.0}
+                    max={1.0}
+                    step={0.1}
+                    leftLabel="None"
+                    rightLabel="Exaggerated"
+                    onChange={setStyleExaggeration}
+                  />
+                </div>
               </div>
             ) : (
               <HistoryPanel

@@ -83,6 +83,8 @@ async def generate_voice(
     file: UploadFile = File(...),
     voice_preset: str = Query("af_bella"),
     speed: float = Query(1.0, ge=0.5, le=2.0),
+    stability: float = Query(0.5, ge=0.0, le=1.0),
+    style_exaggeration: float = Query(0.0, ge=0.0, le=1.0),
     use_orchestrator: bool = Query(False),
     language_code: str | None = Query(None, pattern="^[a-z]{2}(-[a-z]{2,4})?$"),
 ):
@@ -95,12 +97,12 @@ async def generate_voice(
     _validate_language(voice_preset, language_code)
     segments = optimize_script(text)
     if is_bangla_voice(voice_preset):
-        audio, sample_rate = await generate_bangla(text, voice_preset, speed)
+        audio, sample_rate = await generate_bangla(text, voice_preset, speed, stability, style_exaggeration)
     elif use_orchestrator and router:
         routes = router.route_segments(segments)
         audio, sample_rate = engine.generate_routed(segments, routes)
     else:
-        audio, sample_rate = engine.generate_long(segments, voice=voice_preset, speed=speed)
+        audio, sample_rate = engine.generate_long(segments, voice=voice_preset, speed=speed, stability=stability, style_exaggeration=style_exaggeration)
     out = os.path.join(OUTPUT_DIR, f"{uuid.uuid4().hex}.wav")
     sf.write(out, audio, sample_rate)
     return FileResponse(out, media_type="audio/wav", filename="output.wav")
@@ -111,6 +113,8 @@ async def generate_json(
     text: str = Body(..., embed=True),
     voice: str = Query("af_bella"),
     speed: float = Query(1.0, ge=0.5, le=2.0),
+    stability: float = Query(0.5, ge=0.0, le=1.0),
+    style_exaggeration: float = Query(0.0, ge=0.0, le=1.0),
     use_orchestrator: bool = Query(False),
     language_code: str | None = Query(None, pattern="^[a-z]{2}(-[a-z]{2,4})?$"),
     user_id: str | None = Query(None),
@@ -130,12 +134,12 @@ async def generate_json(
     segments = optimize_script(text)
     detected = VOICE_LANG_MAP.get(voice, "en-us")
     if is_bangla_voice(voice):
-        audio, sample_rate = await generate_bangla(text, voice, speed)
+        audio, sample_rate = await generate_bangla(text, voice, speed, stability, style_exaggeration)
     elif use_orchestrator and router:
         routes = router.route_segments(segments)
         audio, sample_rate = engine.generate_routed(segments, routes)
     else:
-        audio, sample_rate = engine.generate_long(segments, voice=voice, speed=speed)
+        audio, sample_rate = engine.generate_long(segments, voice=voice, speed=speed, stability=stability, style_exaggeration=style_exaggeration)
     out_name = f"{uuid.uuid4().hex}.wav"
     out_path = os.path.join(OUTPUT_DIR, out_name)
     sf.write(out_path, audio, sample_rate)

@@ -9,6 +9,8 @@ export interface GenerateOptions {
   text: string;
   voice?: string;
   speed?: number;
+  stability?: number;
+  styleExaggeration?: number;
   languageCode?: string | null;
   userId?: string | null;
   service?: string;
@@ -42,11 +44,19 @@ export async function generateSpeech({
   text,
   voice = "af_bella",
   speed = 1.0,
+  stability = 0.5,
+  styleExaggeration = 0.0,
   languageCode = null,
   userId = null,
   service = "styletts2",
 }: GenerateOptions): Promise<GenerateResult> {
-  const params = new URLSearchParams({ voice, speed: String(speed), service });
+  const params = new URLSearchParams({
+    voice,
+    speed: String(speed),
+    stability: String(stability),
+    style_exaggeration: String(styleExaggeration),
+    service,
+  });
   if (languageCode) params.set("language_code", languageCode);
   if (userId) params.set("user_id", userId);
 

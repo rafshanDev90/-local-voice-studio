@@ -69,8 +69,46 @@ def normalize_volume(samples: np.ndarray, target_rms: float = TARGET_RMS) -> np.
     return samples * gain
 
 
+def apply_stability(samples: np.ndarray, stability: float, sample_rate: int = DEFAULT_SAMPLE_RATE) -> np.ndarray:
+    if stability >= 1.0:
+        return samples
+    frame_ms = 50
+    frame_len = max(1, int(sample_rate * frame_ms / 1000))
+    num_frames = max(2, len(samples) // frame_len)
+    variation = 1.0 - stability
+    gains = np.random.uniform(1.0 - variation * 0.3, 1.0 + variation * 0.3, num_frames)
+    gains = np.interp(
+        np.linspace(0, 1, len(samples)),
+        np.linspace(0, 1, num_frames),
+        gains,
+    )
+    return samples * gains.astype(samples.dtype)
+
+
+def apply_style_exaggeration(samples: np.ndarray, style_exaggeration: float) -> np.ndarray:
+    if style_exaggeration <= 0.0:
+        return samples
+    abs_s = np.abs(samples)
+    peak = abs_s.max()
+    if peak < 1e-6:
+        return samples
+    norm = abs_s / peak
+    threshold = 0.5
+    expand = 1.0 + style_exaggeration * 0.5
+    compress = 1.0 - style_exaggeration * 0.3
+    mapped = np.where(
+        norm > threshold,
+        threshold + (norm - threshold) * expand,
+        norm * compress,
+    )
+    mapped = np.clip(mapped, 0.0, 1.0)
+    gain = mapped / np.clip(norm, 1e-6, None)
+    return samples * gain.astype(samples.dtype)
+
+
 async def generate_bangla(
     text: str, voice: str, speed: float = 1.0,
+    stability: float = 0.5, style_exaggeration: float = 0.0,
 ) -> tuple[np.ndarray, int]:
     voice_id = BANGLA_VOICE_MAP.get(voice, voice)
     rate = f"{int((speed - 1) * 100):+d}%"
@@ -83,6 +121,8 @@ async def generate_bangla(
     if data.ndim > 1:
         data = data.mean(axis=1)
     data = data.astype(np.float32)
+    data = apply_stability(data, stability, int(sr))
+    data = apply_style_exaggeration(data, style_exaggeration)
     data = normalize_volume(data)
     return data, int(sr)
 
@@ -91,7 +131,11 @@ class TTSEngine:
     def __init__(self, model_path: str = "server/models/kokoro-v0_19.onnx", voices_path: str = "server/models/voices.bin"):
         self.kokoro = Kokoro(model_path, voices_path)
 
-    def generate(self, text: str, voice: str = "af_bella", speed: float = 1.0, volume: float = 1.0) -> tuple[np.ndarray, int]:
+    def generate(
+        self, text: str, voice: str = "af_bella",
+        speed: float = 1.0, volume: float = 1.0,
+        stability: float = 0.5, style_exaggeration: float = 0.0,
+    ) -> tuple[np.ndarray, int]:
         clean, emotion = self._apply_emotion(text)
         sp = emotion.get("speed", 1.0) * speed
         vol = emotion.get("volume", 1.0) * volume
@@ -100,23 +144,29 @@ class TTSEngine:
         samples, sr = self.kokoro.create(clean, voice=voice, speed=sp)
         if vol != 1.0:
             samples = self._scale_volume(samples, vol)
+        samples = apply_stability(samples, stability, sr)
+        samples = apply_style_exaggeration(samples, style_exaggeration)
         samples = normalize_volume(samples)
         return samples, sr
 
-    def generate_long(self, segments: list[str], voice: str = "af_bella", speed: float = 1.0, volume: float = 1.0) -> tuple[np.ndarray, int]:
-        profiles = [(s, voice, speed, volume) for s in segments]
+    def generate_long(
+        self, segments: list[str], voice: str = "af_bella",
+        speed: float = 1.0, volume: float = 1.0,
+        stability: float = 0.5, style_exaggeration: float = 0.0,
+    ) -> tuple[np.ndarray, int]:
+        profiles = [(s, voice, speed, volume, stability, style_exaggeration) for s in segments]
         return self._generate_profiles(profiles)
 
     def generate_routed(self, segments: list[str], routes: list[tuple[str, float, float]]) -> tuple[np.ndarray, int]:
-        profiles = [(seg, v, s, vol) for (seg, (v, s, vol)) in zip(segments, routes)]
+        profiles = [(seg, v, s, vol, 0.5, 0.0) for (seg, (v, s, vol)) in zip(segments, routes)]
         return self._generate_profiles(profiles)
 
-    def _generate_profiles(self, profiles: list[tuple[str, str, float, float]]) -> tuple[np.ndarray, int]:
+    def _generate_profiles(self, profiles: list[tuple[str, str, float, float, float, float]]) -> tuple[np.ndarray, int]:
         audio_parts = []
         sample_rate = DEFAULT_SAMPLE_RATE
         prev = None
 
-        for text, voice, speed, volume in profiles:
+        for text, voice, speed, volume, stability, style_exaggeration in profiles:
             if not text.strip():
                 continue
 
@@ -131,6 +181,8 @@ class TTSEngine:
 
             if vol != 1.0:
                 samples = self._scale_volume(samples, vol)
+            samples = apply_stability(samples, stability, sr)
+            samples = apply_style_exaggeration(samples, style_exaggeration)
             samples = normalize_volume(samples)
 
             gap = self._silence_gap(prev, text)
