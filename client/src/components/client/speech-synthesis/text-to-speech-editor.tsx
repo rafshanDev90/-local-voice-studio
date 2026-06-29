@@ -191,9 +191,22 @@ export function TextToSpeechEditor({
         />
       </div>
 
+      {/* Loading skeleton */}
+      {loading && !audioUrl && (
+        <div className="mx-3 mb-3 overflow-hidden rounded-xl border border-gray-200 bg-white p-3 shadow-sm md:mx-5 md:mb-5">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="h-10 w-10 flex-shrink-0 rounded-lg bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer" />
+              <div className="h-9 flex-1 rounded-lg bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer" />
+            </div>
+            <div className="h-10 w-full rounded-lg bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer md:w-10" />
+          </div>
+        </div>
+      )}
+
       {/* Generated audio player */}
       {audioUrl && (
-        <div className="mx-3 mb-3 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm md:mx-5 md:mb-5 md:flex-row md:items-center">
+        <div className="mx-3 mb-3 animate-fade-in flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm md:mx-5 md:mb-5 md:flex-row md:items-center">
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-950 text-white">
               <IoMicOutline className="h-4 w-4" />

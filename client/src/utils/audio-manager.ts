@@ -44,6 +44,12 @@ class AudioManager {
     return this.audioElement?.pause();
   }
 
+  seek(percent: number): void {
+    if (this.audioElement && this.audioElement.duration) {
+      this.audioElement.currentTime = (percent / 100) * this.audioElement.duration;
+    }
+  }
+
   skipForward(seconds: number = 10): void {
     if (this.audioElement) {
       this.audioElement.currentTime = Math.min(

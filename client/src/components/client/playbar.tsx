@@ -79,11 +79,19 @@ export default function Playbar() {
     return formatTime(audioManager.getCurrentTime());
   };
 
+  const handleCollapsedBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percent = (x / rect.width) * 100;
+    audioManager.seek(percent);
+    togglePlaybar();
+  };
+
   return (
     <>
       {!isPlaybarOpen && (
         <div
-          onClick={togglePlaybar}
+          onClick={handleCollapsedBarClick}
           className="absolute bottom-2 left-1/2 z-10 -translate-x-1/2 transform cursor-pointer"
         >
           <div className="flex h-1 w-96 items-center rounded-full bg-gray-300">
@@ -165,10 +173,37 @@ export default function Playbar() {
                 </button>
               </div>
               <div className="mt-1 flex w-full items-center">
-                <span className="mr-2 text-xs text-gray-400">
-                  {getCurrentTimeFormatted()}
-                </span>
-                <div className="relative flex-1">
+                <div className="mr-2 flex items-center gap-1">
+                  <div
+                    className="flex origin-bottom items-end gap-[2px]"
+                    style={{ height: "16px" }}
+                  >
+                    {[0, 0.15, 0.3, 0.45, 0.6].map((delay, i) => (
+                      <div
+                        key={i}
+                        className={`w-[3px] origin-bottom rounded-sm bg-black/70 transition-transform duration-300 ${
+                          isPlaying ? "animate-waveform" : "scale-y-[0.2]"
+                        }`}
+                        style={{
+                          height: "100%",
+                          animationDelay: isPlaying ? `${delay}s` : "0s",
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-gray-400">
+                    {getCurrentTimeFormatted()}
+                  </span>
+                </div>
+                <div
+                  className="relative flex-1 cursor-pointer"
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const percent = (x / rect.width) * 100;
+                    audioManager.seek(percent);
+                  }}
+                >
                   <div className="h-1 rounded-full bg-gray-200">
                     <div
                       className="absolute h-1 rounded-full bg-black"
@@ -225,6 +260,23 @@ export default function Playbar() {
             </div>
 
             <div className="flex items-center gap-2 px-4">
+              <div
+                className="flex origin-bottom items-end gap-[2px]"
+                style={{ height: "14px" }}
+              >
+                {[0, 0.2, 0.4, 0.6].map((delay, i) => (
+                  <div
+                    key={i}
+                    className={`w-[2px] origin-bottom rounded-sm bg-black/50 transition-transform duration-300 ${
+                      isPlaying ? "animate-waveform" : "scale-y-[0.2]"
+                    }`}
+                    style={{
+                      height: "100%",
+                      animationDelay: isPlaying ? `${delay}s` : "0s",
+                    }}
+                  />
+                ))}
+              </div>
               <button
                 onClick={downloadAudio}
                 className="rounded-full p-1.5 hover:bg-gray-100"
