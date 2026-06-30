@@ -64,13 +64,16 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     });
 
     if (audioElement) {
-      setTimeout(() => {
-        audioManager.setAudioSource(audio.audioUrl);
+      audioManager.setAudioSource(audio.audioUrl);
+      audioManager.waitForCanPlay().then(() => {
         audioManager.play()?.catch((err) => {
           console.error("Error playing audio: ", err);
           set({ isPlaying: false });
         });
-      }, 0);
+      }).catch((err) => {
+        console.error("Error loading audio: ", err);
+        set({ isPlaying: false });
+      });
     }
   },
 

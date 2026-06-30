@@ -36,6 +36,49 @@ class AudioManager {
     }
   }
 
+  resetSource(): void {
+    if (this.audioElement) {
+      this.audioElement.removeAttribute("src");
+      this.audioElement.load();
+    }
+  }
+
+  waitForCanPlay(timeoutMs: number = 5000): Promise<void> {
+    const el = this.audioElement;
+    if (!el) return Promise.reject(new Error("No audio element"));
+
+    if (el.readyState >= 2) return Promise.resolve();
+
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        el.removeEventListener("canplay", onCanPlay);
+        el.removeEventListener("error", onError);
+        reject(new Error("Audio load timeout"));
+      }, timeoutMs);
+
+      const onCanPlay = () => {
+        clearTimeout(timeout);
+        el.removeEventListener("canplay", onCanPlay);
+        el.removeEventListener("error", onError);
+        resolve();
+      };
+
+      const onError = () => {
+        clearTimeout(timeout);
+        el.removeEventListener("canplay", onCanPlay);
+        el.removeEventListener("error", onError);
+        const mediaError = el.error;
+        const msg = mediaError
+          ? `Audio error code=${mediaError.code}: ${mediaError.message}`
+          : "Unknown audio error";
+        reject(new Error(msg));
+      };
+
+      el.addEventListener("canplay", onCanPlay);
+      el.addEventListener("error", onError);
+    });
+  }
+
   play(): Promise<void> | undefined {
     return this.audioElement?.play();
   }

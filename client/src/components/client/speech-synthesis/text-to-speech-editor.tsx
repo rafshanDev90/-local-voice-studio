@@ -17,7 +17,8 @@ import { GenerateButton } from "../generate-button";
 import { generateSpeech, LanguageMismatchError } from "~/lib/tts";
 import { useVoiceStore, LANGUAGES } from "~/stores/voice-store";
 import { useAudioStore } from "~/stores/audio-store";
-import { useAudioConfig } from "~/stores/audio-config";
+import { useAudioConfig, type AudioFormat } from "~/stores/audio-config";
+import { FormatSelector } from "~/components/client/speech-synthesis/format-selector";
 import toast from "react-hot-toast";
 
 export function TextToSpeechEditor({
@@ -42,7 +43,7 @@ export function TextToSpeechEditor({
   const getVoices = useVoiceStore((s) => s.getVoices);
 
   const { playAudio } = useAudioStore();
-  const { speed, stability, styleExaggeration } = useAudioConfig();
+  const { speed, stability, styleExaggeration, format } = useAudioConfig();
 
   const availableVoices = getVoices(service, selectedLanguage);
 
@@ -66,9 +67,9 @@ export function TextToSpeechEditor({
     if (!audioBlob || !audioUrl) return;
     const a = document.createElement("a");
     a.href = audioUrl;
-    a.download = `voice-${Date.now()}.wav`;
+    a.download = `voice-${Date.now()}.${format}`;
     a.click();
-  }, [audioBlob, audioUrl]);
+  }, [audioBlob, audioUrl, format]);
 
   const templateTexts = {
     "Narrate a story":
@@ -111,6 +112,7 @@ export function TextToSpeechEditor({
         speed,
         stability,
         styleExaggeration,
+        format,
         languageCode: selectedLanguage === "auto" ? null : selectedLanguage,
         service,
       });
@@ -234,6 +236,9 @@ export function TextToSpeechEditor({
         </div>
       )}
 
+      <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-2 md:px-5">
+        <FormatSelector />
+      </div>
       <div className="border-t border-gray-200 bg-white px-4 py-4 md:px-5">
         {textContent.length === 0 ? (
           <div>

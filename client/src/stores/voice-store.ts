@@ -21,6 +21,7 @@ export interface Voice {
 export const LANGUAGES: { code: string; label: string }[] = [
   { code: "en-us", label: "English (US)" },
   { code: "en-gb", label: "English (UK)" },
+  { code: "en-au", label: "English (Australia)" },
   { code: "bn-bd", label: "বাংলা (বাংলাদেশ)" },
   { code: "bn-in", label: "বাংলা (ভারত)" },
 ];
@@ -40,6 +41,12 @@ const VOICES: Voice[] = [
   { id: "bn-bd-pradeep",  name: "প্রদীপ",    language: "bn-bd", gender: "male",   gradientColors: GRADIENT_COLORS[1]!, service: "styletts2" },
   { id: "bn-in-bashkar",  name: "বাশকার",    language: "bn-in", gender: "male",   gradientColors: GRADIENT_COLORS[2]!, service: "styletts2" },
   { id: "bn-in-tanishaa", name: "তানিশা",    language: "bn-in", gender: "female", gradientColors: GRADIENT_COLORS[3]!, service: "styletts2" },
+  { id: "em_guy",        name: "Guy",        language: "en-us", gender: "male",   gradientColors: GRADIENT_COLORS[4]!, service: "styletts2" },
+  { id: "em_andrew",     name: "Andrew",     language: "en-us", gender: "male",   gradientColors: GRADIENT_COLORS[0]!, service: "styletts2" },
+  { id: "em_brian",      name: "Brian",      language: "en-us", gender: "male",   gradientColors: GRADIENT_COLORS[1]!, service: "styletts2" },
+  { id: "em_ryan",       name: "Ryan",       language: "en-gb", gender: "male",   gradientColors: GRADIENT_COLORS[2]!, service: "styletts2" },
+  { id: "em_thomas",     name: "Thomas",     language: "en-gb", gender: "male",   gradientColors: GRADIENT_COLORS[3]!, service: "styletts2" },
+  { id: "em_william",    name: "William",    language: "en-au", gender: "male",   gradientColors: GRADIENT_COLORS[4]!, service: "styletts2" },
 ];
 
 const defaultVoice = VOICES.find((v) => v.id === "af_bella") ?? null;

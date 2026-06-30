@@ -11,6 +11,7 @@ export interface GenerateOptions {
   speed?: number;
   stability?: number;
   styleExaggeration?: number;
+  format?: string;
   languageCode?: string | null;
   userId?: string | null;
   service?: string;
@@ -40,12 +41,20 @@ export class LanguageMismatchError extends Error {
   }
 }
 
+const MIME_MAP: Record<string, string> = {
+  wav: "audio/wav",
+  mp3: "audio/mpeg",
+  ogg: "audio/ogg",
+  flac: "audio/flac",
+};
+
 export async function generateSpeech({
   text,
   voice = "af_bella",
   speed = 1.0,
   stability = 0.5,
   styleExaggeration = 0.0,
+  format = "wav",
   languageCode = null,
   userId = null,
   service = "styletts2",
@@ -55,6 +64,7 @@ export async function generateSpeech({
     speed: String(speed),
     stability: String(stability),
     style_exaggeration: String(styleExaggeration),
+    format,
     service,
   });
   if (languageCode) params.set("language_code", languageCode);
@@ -81,7 +91,9 @@ export async function generateSpeech({
 
   const languageDetected = res.headers.get("X-Language-Detected");
   const historyId = res.headers.get("X-History-Id") || null;
-  const blob = await res.blob();
+  const arrayBuffer = await res.arrayBuffer();
+  const mimeType = MIME_MAP[format] ?? "audio/wav";
+  const blob = new Blob([arrayBuffer], { type: mimeType });
   const audioUrl = URL.createObjectURL(blob);
 
   return { audioUrl, blob, languageDetected, historyId };

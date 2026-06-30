@@ -18,7 +18,7 @@ class TestVoices:
         resp = client.get("/api/voices")
         assert resp.status_code == status.HTTP_200_OK
         voices = resp.json()
-        assert len(voices) == 14
+        assert len(voices) == 20
         assert voices[0]["id"] == "af_bella"
         assert voices[0]["language"] == "en-us"
 
@@ -33,7 +33,7 @@ class TestVoices:
         resp = client.get("/api/voices?language=en-us")
         assert resp.status_code == status.HTTP_200_OK
         voices = resp.json()
-        assert len(voices) == 6
+        assert len(voices) == 9
         assert all(v["language"] == "en-us" for v in voices)
 
     def test_list_voices_filter_unknown(self, client):

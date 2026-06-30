@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import io
+import logging
 import re
 from typing import Any
 
@@ -9,6 +10,9 @@ import edge_tts
 import numpy as np
 import soundfile as sf
 from kokoro_onnx import Kokoro
+from server.exceptions import TTSModelError, TTSGenerationError, TTSAudioError
+
+logger = logging.getLogger("voice-agent")
 
 DEFAULT_SAMPLE_RATE = 24000
 TARGET_RMS = 0.14
@@ -19,6 +23,17 @@ BANGLA_VOICE_MAP: dict[str, str] = {
     "bn-in-bashkar": "bn-IN-BashkarNeural",
     "bn-in-tanishaa": "bn-IN-TanishaaNeural",
 }
+
+EDGE_TTS_ENGLISH_MALE_VOICES: dict[str, str] = {
+    "em_guy": "en-US-GuyNeural",
+    "em_andrew": "en-US-AndrewNeural",
+    "em_brian": "en-US-BrianNeural",
+    "em_ryan": "en-GB-RyanNeural",
+    "em_thomas": "en-GB-ThomasNeural",
+    "em_william": "en-AU-WilliamMultilingualNeural",
+}
+
+EDGE_TTS_VOICE_MAP: dict[str, str] = {**BANGLA_VOICE_MAP, **EDGE_TTS_ENGLISH_MALE_VOICES}
 
 EMOTION_PROFILES = {
     "excited": {"speed": 1.15, "volume": 1.3},
@@ -37,6 +52,10 @@ _BANGLA_UNICODE_RANGE = range(0x0980, 0x0A00)
 
 def is_bangla_voice(voice: str) -> bool:
     return voice in BANGLA_VOICE_MAP
+
+
+def is_edge_tts_voice(voice: str) -> bool:
+    return voice in EDGE_TTS_VOICE_MAP
 
 
 def detect_language(text: str) -> str:
@@ -106,30 +125,49 @@ def apply_style_exaggeration(samples: np.ndarray, style_exaggeration: float) -> 
     return samples * gain.astype(samples.dtype)
 
 
-async def generate_bangla(
+async def generate_edge_tts(
     text: str, voice: str, speed: float = 1.0,
     stability: float = 0.5, style_exaggeration: float = 0.0,
 ) -> tuple[np.ndarray, int]:
-    voice_id = BANGLA_VOICE_MAP.get(voice, voice)
+    voice_id = EDGE_TTS_VOICE_MAP.get(voice, voice)
     rate = f"{int((speed - 1) * 100):+d}%"
     communicate = edge_tts.Communicate(text, voice_id, rate=rate)
     audio_bytes = b""
-    async for chunk in communicate.stream():
-        if chunk["type"] == "audio":
-            audio_bytes += chunk["data"]
-    data, sr = sf.read(io.BytesIO(audio_bytes))
+    try:
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_bytes += chunk["data"]
+    except Exception as e:
+        logger.error("Edge-TTS stream failed: %s", e, exc_info=True)
+        raise TTSGenerationError(f"Failed to stream audio from edge-tts voice={voice}") from e
+    if not audio_bytes:
+        logger.error("Edge-TTS returned empty audio for voice=%s", voice)
+        raise TTSGenerationError(f"Edge-TTS returned empty audio for voice={voice}")
+    try:
+        data, sr = sf.read(io.BytesIO(audio_bytes))
+    except Exception as e:
+        logger.error("Failed to read edge-tts audio bytes: %s", e, exc_info=True)
+        raise TTSAudioError("Failed to decode edge-tts audio") from e
     if data.ndim > 1:
         data = data.mean(axis=1)
     data = data.astype(np.float32)
-    data = apply_stability(data, stability, int(sr))
-    data = apply_style_exaggeration(data, style_exaggeration)
-    data = normalize_volume(data)
+    try:
+        data = apply_stability(data, stability, int(sr))
+        data = apply_style_exaggeration(data, style_exaggeration)
+        data = normalize_volume(data)
+    except Exception as e:
+        logger.error("Edge-TTS audio post-processing failed: %s", e, exc_info=True)
+        raise TTSAudioError("Failed to post-process edge-tts audio") from e
     return data, int(sr)
 
 
 class TTSEngine:
     def __init__(self, model_path: str = "server/models/kokoro-v0_19.onnx", voices_path: str = "server/models/voices.bin"):
-        self.kokoro = Kokoro(model_path, voices_path)
+        try:
+            self.kokoro = Kokoro(model_path, voices_path)
+        except Exception as e:
+            logger.error("Kokoro model init failed: %s", e, exc_info=True)
+            raise TTSModelError(f"Failed to load Kokoro model from {model_path}") from e
 
     def generate(
         self, text: str, voice: str = "af_bella",
@@ -141,12 +179,20 @@ class TTSEngine:
         vol = emotion.get("volume", 1.0) * volume
         if sp < 0.5:
             sp = 0.5
-        samples, sr = self.kokoro.create(clean, voice=voice, speed=sp)
+        try:
+            samples, sr = self.kokoro.create(clean, voice=voice, speed=sp)
+        except Exception as e:
+            logger.error("Kokoro generate failed: %s", e, exc_info=True)
+            raise TTSGenerationError(f"Failed to generate speech for voice={voice}") from e
         if vol != 1.0:
             samples = self._scale_volume(samples, vol)
-        samples = apply_stability(samples, stability, sr)
-        samples = apply_style_exaggeration(samples, style_exaggeration)
-        samples = normalize_volume(samples)
+        try:
+            samples = apply_stability(samples, stability, sr)
+            samples = apply_style_exaggeration(samples, style_exaggeration)
+            samples = normalize_volume(samples)
+        except Exception as e:
+            logger.error("Audio post-processing failed: %s", e, exc_info=True)
+            raise TTSAudioError("Failed to post-process audio") from e
         return samples, sr
 
     def generate_long(
@@ -176,14 +222,22 @@ class TTSEngine:
             if sp < 0.5:
                 sp = 0.5
 
-            samples, sr = self.kokoro.create(clean, voice=voice, speed=sp)
+            try:
+                samples, sr = self.kokoro.create(clean, voice=voice, speed=sp)
+            except Exception as e:
+                logger.error("Kokoro segment failed for voice=%s: %s", voice, e, exc_info=True)
+                raise TTSGenerationError(f"Failed to generate segment for voice={voice}") from e
             sample_rate = sr
 
             if vol != 1.0:
                 samples = self._scale_volume(samples, vol)
-            samples = apply_stability(samples, stability, sr)
-            samples = apply_style_exaggeration(samples, style_exaggeration)
-            samples = normalize_volume(samples)
+            try:
+                samples = apply_stability(samples, stability, sr)
+                samples = apply_style_exaggeration(samples, style_exaggeration)
+                samples = normalize_volume(samples)
+            except Exception as e:
+                logger.error("Segment audio post-processing failed: %s", e, exc_info=True)
+                raise TTSAudioError("Failed to post-process segment audio") from e
 
             gap = self._silence_gap(prev, text)
             if prev is not None and gap > 0:
@@ -193,7 +247,11 @@ class TTSEngine:
 
         if not audio_parts:
             return np.array([], dtype=np.float32), sample_rate
-        return np.concatenate(audio_parts), sample_rate
+        try:
+            return np.concatenate(audio_parts), sample_rate
+        except Exception as e:
+            logger.error("Failed to concatenate audio parts: %s", e, exc_info=True)
+            raise TTSAudioError("Failed to concatenate audio segments") from e
 
     @staticmethod
     def _apply_emotion(text: str) -> tuple[str, dict]:

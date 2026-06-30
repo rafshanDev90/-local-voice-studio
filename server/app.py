@@ -1,13 +1,20 @@
+import logging
 import os
-import tempfile
+import traceback
 import uuid
+
 import soundfile as sf
-from fastapi import FastAPI, UploadFile, File, Query, Body, HTTPException
+from fastapi import FastAPI, Request, UploadFile, File, Query, Body, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from server.tts_engine import TTSEngine, is_bangla_voice, generate_bangla, detect_language
+from server.audio_formats import FORMATS, write_audio
+from server.exceptions import TTSModelError, TTSGenerationError, TTSAudioError
+from server.tts_engine import TTSEngine, is_bangla_voice, is_edge_tts_voice, generate_edge_tts, detect_language
 from server.optimizer import optimize_script
 from server.database import connect, disconnect, save_voice_history, list_voice_history, get_voice_history_item, delete_voice_history
+
+logger = logging.getLogger("voice-agent")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -22,6 +29,18 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["X-Language-Detected"],
 )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error("Unhandled exception on %s %s: %s", request.method, request.url.path, exc, exc_info=True)
+    if isinstance(exc, TTSModelError):
+        return JSONResponse(status_code=503, content={"detail": "TTS model unavailable"})
+    if isinstance(exc, TTSGenerationError):
+        return JSONResponse(status_code=500, content={"detail": "Speech generation failed"})
+    if isinstance(exc, TTSAudioError):
+        return JSONResponse(status_code=500, content={"detail": "Audio processing failed"})
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
 
 engine: TTSEngine | None = None
 router = None
@@ -41,6 +60,12 @@ VOICES_CATALOG = [
     {"id": "bn-bd-pradeep",  "name": "Pradeep",    "language": "bn-bd", "gender": "male"},
     {"id": "bn-in-bashkar",  "name": "Bashkar",    "language": "bn-in", "gender": "male"},
     {"id": "bn-in-tanishaa", "name": "Tanishaa",   "language": "bn-in", "gender": "female"},
+    {"id": "em_guy",         "name": "Guy",        "language": "en-us", "gender": "male"},
+    {"id": "em_andrew",      "name": "Andrew",     "language": "en-us", "gender": "male"},
+    {"id": "em_brian",       "name": "Brian",      "language": "en-us", "gender": "male"},
+    {"id": "em_ryan",        "name": "Ryan",       "language": "en-gb", "gender": "male"},
+    {"id": "em_thomas",      "name": "Thomas",     "language": "en-gb", "gender": "male"},
+    {"id": "em_william",     "name": "William",    "language": "en-au", "gender": "male"},
 ]
 
 VOICE_LANG_MAP: dict[str, str] = {v["id"]: v["language"] for v in VOICES_CATALOG}
@@ -52,13 +77,13 @@ async def startup():
     engine = TTSEngine()
     try:
         await connect()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Database connection failed: %s", e)
     try:
         from server.orchestrator import VoiceRouter
         router = VoiceRouter()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("VoiceRouter init failed: %s", e)
 
 
 @app.on_event("shutdown")
@@ -87,6 +112,7 @@ async def generate_voice(
     style_exaggeration: float = Query(0.0, ge=0.0, le=1.0),
     use_orchestrator: bool = Query(False),
     language_code: str | None = Query(None, pattern="^[a-z]{2}(-[a-z]{2,4})?$"),
+    format: str = Query("wav", pattern="^(wav|mp3|ogg|flac)$"),
 ):
     if not file.filename or not file.filename.endswith(".txt"):
         raise HTTPException(422, "Only .txt files accepted")
@@ -96,16 +122,16 @@ async def generate_voice(
         raise HTTPException(400, "Script is empty")
     _validate_language(voice_preset, language_code)
     segments = optimize_script(text)
-    if is_bangla_voice(voice_preset):
-        audio, sample_rate = await generate_bangla(text, voice_preset, speed, stability, style_exaggeration)
+    if is_edge_tts_voice(voice_preset):
+        audio, sample_rate = await generate_edge_tts(text, voice_preset, speed, stability, style_exaggeration)
     elif use_orchestrator and router:
         routes = router.route_segments(segments)
         audio, sample_rate = engine.generate_routed(segments, routes)
     else:
         audio, sample_rate = engine.generate_long(segments, voice=voice_preset, speed=speed, stability=stability, style_exaggeration=style_exaggeration)
-    out = os.path.join(OUTPUT_DIR, f"{uuid.uuid4().hex}.wav")
-    sf.write(out, audio, sample_rate)
-    return FileResponse(out, media_type="audio/wav", filename="output.wav")
+    fmt_info = FORMATS[format]
+    out = write_audio(OUTPUT_DIR, uuid.uuid4().hex, audio, sample_rate, format)
+    return FileResponse(out, media_type=fmt_info["mime"], filename=f"output{fmt_info['ext']}")
 
 
 @app.post("/api/generate")
@@ -119,6 +145,7 @@ async def generate_json(
     language_code: str | None = Query(None, pattern="^[a-z]{2}(-[a-z]{2,4})?$"),
     user_id: str | None = Query(None),
     service: str = Query("styletts2"),
+    format: str = Query("wav", pattern="^(wav|mp3|ogg|flac)$"),
 ):
     if not text.strip():
         raise HTTPException(400, "Text is empty")
@@ -133,16 +160,17 @@ async def generate_json(
     _validate_language(voice, language_code)
     segments = optimize_script(text)
     detected = VOICE_LANG_MAP.get(voice, "en-us")
-    if is_bangla_voice(voice):
-        audio, sample_rate = await generate_bangla(text, voice, speed, stability, style_exaggeration)
+    if is_edge_tts_voice(voice):
+        audio, sample_rate = await generate_edge_tts(text, voice, speed, stability, style_exaggeration)
     elif use_orchestrator and router:
         routes = router.route_segments(segments)
         audio, sample_rate = engine.generate_routed(segments, routes)
     else:
         audio, sample_rate = engine.generate_long(segments, voice=voice, speed=speed, stability=stability, style_exaggeration=style_exaggeration)
-    out_name = f"{uuid.uuid4().hex}.wav"
-    out_path = os.path.join(OUTPUT_DIR, out_name)
-    sf.write(out_path, audio, sample_rate)
+    fmt_info = FORMATS[format]
+    out_stem = uuid.uuid4().hex
+    out_path = write_audio(OUTPUT_DIR, out_stem, audio, sample_rate, format)
+    out_name = os.path.basename(out_path)
     try:
         voice_name = next((v["name"] for v in VOICES_CATALOG if v["id"] == voice), voice)
         history_id = await save_voice_history(
@@ -158,8 +186,8 @@ async def generate_json(
         history_id = None
     return FileResponse(
         out_path,
-        media_type="audio/wav",
-        filename="output.wav",
+        media_type=fmt_info["mime"],
+        filename=f"output{fmt_info['ext']}",
         headers={
             "X-Language-Detected": detected,
             "X-History-Id": str(history_id) if history_id else "",

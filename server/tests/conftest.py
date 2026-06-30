@@ -15,8 +15,8 @@ def mock_tts_backend():
         instance = mock_kokoro.return_value
         instance.create.return_value = fake_audio
 
-        with patch("server.app.generate_bangla", new_callable=AsyncMock) as mock_bangla:
-            mock_bangla.return_value = fake_audio
+        with patch("server.app.generate_edge_tts", new_callable=AsyncMock) as mock_edge:
+            mock_edge.return_value = fake_audio
             yield
 
 
