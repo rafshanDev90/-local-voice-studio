@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import {
   IoChevronDown,
   IoDownloadOutline,
@@ -79,19 +79,47 @@ export default function Playbar() {
     return formatTime(audioManager.getCurrentTime());
   };
 
-  const handleCollapsedBarClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const percent = (x / rect.width) * 100;
-    audioManager.seek(percent);
-    togglePlaybar();
-  };
+  const handleSeekStart = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const percent = Math.min(100, Math.max(0, (x / rect.width) * 100));
+      audioManager.seek(percent);
+    },
+    [],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const step = 5;
+      let target = progress;
+
+      if (e.key === "ArrowRight" || e.key === "Right") {
+        target = Math.min(100, progress + step);
+      } else if (e.key === "ArrowLeft" || e.key === "Left") {
+        target = Math.max(0, progress - step);
+      } else if (e.key === "Home") {
+        target = 0;
+      } else if (e.key === "End") {
+        target = 100;
+      } else {
+        return;
+      }
+
+      audioManager.seek(target);
+      e.preventDefault();
+    },
+    [audioManager, progress],
+  );
 
   return (
     <>
       {!isPlaybarOpen && (
         <div
-          onClick={handleCollapsedBarClick}
+          onClick={(e) => {
+            handleSeekStart(e);
+            togglePlaybar();
+          }}
           className="absolute bottom-2 left-1/2 z-10 -translate-x-1/2 transform cursor-pointer"
         >
           <div className="flex h-1 w-96 items-center rounded-full bg-gray-300">
@@ -196,13 +224,15 @@ export default function Playbar() {
                   </span>
                 </div>
                 <div
+                  role="slider"
+                  aria-label="Audio progress"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(progress)}
+                  tabIndex={0}
+                  onKeyDown={handleKeyDown}
+                  onClick={handleSeekStart}
                   className="relative flex-1 cursor-pointer"
-                  onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const percent = (x / rect.width) * 100;
-                    audioManager.seek(percent);
-                  }}
                 >
                   <div className="h-1 rounded-full bg-gray-200">
                     <div

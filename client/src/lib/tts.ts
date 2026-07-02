@@ -98,3 +98,10 @@ export async function generateSpeech({
 
   return { audioUrl, blob, languageDetected, historyId };
 }
+
+export function revokeAudioUrl(audioUrl: string | null | undefined): void {
+  if (typeof window === "undefined") return;
+  if (audioUrl && audioUrl.startsWith("blob:")) {
+    URL.revokeObjectURL(audioUrl);
+  }
+}

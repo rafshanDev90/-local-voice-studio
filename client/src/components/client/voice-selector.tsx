@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
-import { IoChevronDown, IoChevronUp } from "react-icons/io5";
+import { IoChevronDown } from "react-icons/io5";
 import { useVoiceStore } from "~/stores/voice-store";
 import { ServiceType } from "~/types/services";
 
@@ -35,44 +37,54 @@ export function VoiceSelector({ service }: { service: ServiceType }) {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <div
+      <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2 hover:cursor-pointer hover:bg-gray-100 hover:bg-opacity-30"
+        className="flex w-full items-center justify-between rounded-lg border border-border bg-surface px-3 py-2.5 text-left text-sm transition-colors hover:bg-surface-secondary"
       >
-        <div className="flex items-center">
-          <div
-            className="relative mr-2.5 flex h-4 w-4 items-center justify-center overflow-hidden rounded-full"
+        <span className="flex items-center gap-2.5">
+          <span
+            className="block h-3.5 w-3.5 flex-shrink-0 rounded-full"
             style={{ background: selectedVoice?.gradientColors }}
-          ></div>
-          <span className="text-sm">
-            {selectedVoice?.name ?? "No voice selected"}
+          />
+          <span className="text-text-primary">
+            {selectedVoice?.name ?? "Select a voice"}
           </span>
-        </div>
-        {isOpen ? (
-          <IoChevronUp className="h-4 w-4 text-gray-400" />
-        ) : (
-          <IoChevronDown className="h-4 w-4 text-gray-400" />
-        )}
-      </div>
+        </span>
+        <IoChevronDown
+          className={`h-4 w-4 text-text-tertiary transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
 
       {isOpen && (
-        <div className="absolute left-0 right-0 z-10 mt-1 max-h-60 overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg">
-          {voices.map((voice) => (
-            <div
-              key={voice.id}
-              className={`flex items-center px-3 py-2 hover:cursor-pointer hover:bg-gray-100 ${voice.id === selectedVoice?.id ? "bg-gray-50" : ""}`}
-              onClick={() => {
-                selectVoice(service, voice.id);
-                setIsOpen(false);
-              }}
-            >
-              <div
-                className="relative mr-2 flex h-4 w-4 items-center justify-center overflow-hidden rounded-full"
-                style={{ background: voice.gradientColors }}
-              />
-              <span className="text-sm">{voice.name}</span>
-            </div>
-          ))}
+        <div className="absolute left-0 right-0 z-20 mt-1.5 max-h-64 overflow-auto rounded-lg border border-border bg-surface py-1 shadow-lg">
+          {voices.map((voice) => {
+            const isSelected = voice.id === selectedVoice?.id;
+            return (
+              <button
+                key={voice.id}
+                type="button"
+                onClick={() => {
+                  selectVoice(service, voice.id);
+                  setIsOpen(false);
+                }}
+                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors ${
+                  isSelected
+                    ? "bg-neutral-100 text-text-primary"
+                    : "text-text-secondary hover:bg-surface-secondary hover:text-text-primary"
+                }`}
+              >
+                <span
+                  className="block h-3.5 w-3.5 flex-shrink-0 rounded-full"
+                  style={{ background: voice.gradientColors }}
+                />
+                <span className="flex-1">{voice.name}</span>
+                {isSelected && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-text-primary" />
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

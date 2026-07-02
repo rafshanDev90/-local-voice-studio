@@ -8,6 +8,25 @@ export default {
       fontFamily: {
         sans: ["var(--font-geist-sans)", ...fontFamily.sans],
       },
+      fontSize: {
+        "2xs": ["0.625rem", { lineHeight: "0.875rem" }],
+      },
+      colors: {
+        surface: {
+          DEFAULT: "#ffffff",
+          secondary: "#fafafa",
+          tertiary: "#f5f5f5",
+        },
+        border: {
+          DEFAULT: "#e5e5e5",
+          subtle: "#f0f0f0",
+        },
+        text: {
+          primary: "#0a0a0a",
+          secondary: "#737373",
+          tertiary: "#a3a3a3",
+        },
+      },
       keyframes: {
         waveform: {
           "0%, 100%": { transform: "scaleY(0.2)" },
@@ -21,11 +40,16 @@ export default {
           "0%": { opacity: "0", transform: "translateY(4px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "pulse-dot": {
+          "0%, 100%": { opacity: "0.4" },
+          "50%": { opacity: "1" },
+        },
       },
       animation: {
         waveform: "waveform 0.8s ease-in-out infinite",
         shimmer: "shimmer 1.5s ease-in-out infinite",
         "fade-in": "fade-in 0.4s ease-out",
+        "pulse-dot": "pulse-dot 1.4s ease-in-out infinite",
       },
     },
   },

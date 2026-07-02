@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAudioStore } from "~/stores/audio-store";
 import { GenerateButton } from "../generate-button";
 import { BiDoorOpen } from "react-icons/bi";
@@ -20,6 +20,8 @@ import {
 import toast from "react-hot-toast";
 
 const MAX_CHARS = 500;
+const POLL_INTERVAL_MS = 500;
+const POLL_TIMEOUT_MS = 10 * 60 * 1000;
 
 export function SoundEffectsGenerator({ credits }: { credits: number }) {
   const [textContent, setTextContent] = useState("");
@@ -29,7 +31,10 @@ export function SoundEffectsGenerator({ credits }: { credits: number }) {
   );
   const [loading, setLoading] = useState(false);
   const [currentAudioId, setCurrentAudioId] = useState<string | null>(null);
+  const [pollError, setPollError] = useState<string | null>(null);
   const { playAudio } = useAudioStore();
+  const startedAtRef = useRef<number | null>(null);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isTextEmpty = textContent.trim() === "";
 
@@ -46,11 +51,78 @@ export function SoundEffectsGenerator({ credits }: { credits: number }) {
         });
       }
       setCurrentAudioId(audioId);
+      setPollError(null);
     } catch (error) {
       console.error("Error generating sound effect: ", error);
       setLoading(false);
     }
   };
+
+  const stopPolling = () => {
+    if (pollTimerRef.current) {
+      clearInterval(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+  };
+
+  const timedOutError = "Sound effect generation is taking longer than expected. Please try again.";
+
+  useEffect(() => {
+    if (!currentAudioId || !loading) return;
+    setPollError(null);
+    startedAtRef.current = Date.now();
+
+    const clearTimedPoll = () => {
+      stopPolling();
+      setLoading(false);
+      setCurrentAudioId(null);
+      setPollError(timedOutError);
+    };
+
+    pollTimerRef.current = setInterval(async () => {
+      try {
+        if (!startedAtRef.current || Date.now() - startedAtRef.current > POLL_TIMEOUT_MS) {
+          clearTimedPoll();
+          return;
+        }
+
+        const status = await generationStatus(currentAudioId);
+
+        if (status.success && status.audioUrl) {
+          stopPolling();
+          setLoading(false);
+
+          const newAudio = {
+            id: currentAudioId,
+            title:
+              textContent.substring(0, 50) +
+              (textContent.length > 50 ? "..." : ""),
+            audioUrl: status.audioUrl,
+            voice: "",
+            duration: "0:30",
+            progress: 0,
+            service: "make-an-audio",
+            createdAt: new Date().toLocaleDateString(),
+          };
+
+          playAudio(newAudio);
+          setCurrentAudioId(null);
+        } else if (!status.success) {
+          stopPolling();
+          setLoading(false);
+          setCurrentAudioId(null);
+          console.error("Sound effect generation failed");
+        }
+      } catch (error) {
+        console.error("Error polling for audio status: " + error);
+        stopPolling();
+        setLoading(false);
+        setCurrentAudioId(null);
+      }
+    }, POLL_INTERVAL_MS);
+
+    return stopPolling;
+  }, [currentAudioId, loading, playAudio, textContent, timedOutError]);
 
   const templateTexts = {
     "Car engine revving":
@@ -70,51 +142,6 @@ export function SoundEffectsGenerator({ credits }: { credits: number }) {
     "Helicopter flyby":
       "Helicopter approaching from a distance, passing overhead with loud rotor blades, then flying away",
   };
-
-  useEffect(() => {
-    if (!currentAudioId || !loading) return;
-
-    const pollInterval = setInterval(async () => {
-      try {
-        const status = await generationStatus(currentAudioId);
-
-        if (status.success && status.audioUrl) {
-          clearInterval(pollInterval);
-          setLoading(false);
-
-          const newAudio = {
-            id: currentAudioId,
-            title:
-              textContent.substring(0, 50) +
-              (textContent.length > 50 ? "..." : ""),
-            audioUrl: status.audioUrl,
-            voice: "",
-            duration: "0:30",
-            progress: 0,
-            service: "make-an-audio",
-            createdAt: new Date().toLocaleDateString(),
-          };
-
-          playAudio(newAudio);
-          setCurrentAudioId(null);
-        } else if (!status.success) {
-          clearInterval(pollInterval);
-          setLoading(false);
-          setCurrentAudioId(null);
-          console.error("Sound effect generation failed");
-        }
-      } catch (error) {
-        console.error("Error polling for audio status: " + error);
-        clearInterval(pollInterval);
-        setLoading(false);
-        setCurrentAudioId(null);
-      }
-    }, 500);
-
-    return () => {
-      clearInterval(pollInterval);
-    };
-  }, [currentAudioId, loading, playAudio, textContent]);
 
   return (
     <>
@@ -175,6 +202,9 @@ export function SoundEffectsGenerator({ credits }: { credits: number }) {
                   fullWidth={false}
                 />
               </div>
+              {pollError && (
+                <p className="mt-2 text-sm text-red-600">{pollError}</p>
+              )}
             </div>
           </div>
 
@@ -198,9 +228,7 @@ export function SoundEffectsGenerator({ credits }: { credits: number }) {
                   className="flex items-center rounded-lg border border-gray-200 bg-white px-2 py-2 text-xs hover:bg-gray-50"
                   key={text}
                   onMouseEnter={() =>
-                    setActivePlaceholder(
-                      templateTexts[text as keyof typeof templateTexts],
-                    )
+                    setActivePlaceholder(templateTexts[text as keyof typeof templateTexts])
                   }
                   onMouseLeave={() =>
                     setActivePlaceholder(

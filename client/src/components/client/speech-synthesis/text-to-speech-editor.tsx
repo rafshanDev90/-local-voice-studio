@@ -14,7 +14,7 @@ import {
 import { GoDownload } from "react-icons/go";
 import { ServiceType } from "~/types/services";
 import { GenerateButton } from "../generate-button";
-import { generateSpeech, LanguageMismatchError } from "~/lib/tts";
+import { generateSpeech, LanguageMismatchError, revokeAudioUrl } from "~/lib/tts";
 import { useVoiceStore, LANGUAGES } from "~/stores/voice-store";
 import { useAudioStore } from "~/stores/audio-store";
 import { useAudioConfig, type AudioFormat } from "~/stores/audio-config";
@@ -102,6 +102,8 @@ export function TextToSpeechEditor({
     if (!selectedVoice || !textContent.trim()) return;
 
     setLoading(true);
+    revokeAudioUrl(blobUrlRef.current);
+    blobUrlRef.current = null;
     setAudioBlob(null);
     setAudioUrl(null);
 
@@ -117,7 +119,6 @@ export function TextToSpeechEditor({
         service,
       });
 
-      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
       blobUrlRef.current = result.audioUrl;
 
       setAudioUrl(result.audioUrl);
@@ -141,6 +142,11 @@ export function TextToSpeechEditor({
         createdAt: new Date().toLocaleDateString(),
       });
     } catch (err) {
+      revokeAudioUrl(blobUrlRef.current);
+      blobUrlRef.current = null;
+      setAudioBlob(null);
+      setAudioUrl(null);
+
       if (err instanceof LanguageMismatchError) {
         toast.error(
           `"${selectedVoice?.name}" doesn't support "${selectedLanguage}". Select a voice from the same language group.`,

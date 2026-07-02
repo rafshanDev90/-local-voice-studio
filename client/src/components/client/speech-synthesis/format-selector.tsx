@@ -14,19 +14,20 @@ export function FormatSelector() {
   const setFormat = useAudioConfig((s) => s.setFormat);
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs font-medium text-gray-500">Format:</span>
-      <div className="flex gap-1">
+    <div className="flex items-center gap-1.5">
+      <span className="text-2xs font-medium text-text-tertiary">Format:</span>
+      <div className="flex gap-px rounded-md border border-border bg-surface-secondary p-0.5">
         {FORMATS.map((f) => (
           <button
             key={f.value}
+            type="button"
             onClick={() => setFormat(f.value)}
-            className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${
-              format === f.value
-                ? "bg-gray-900 text-white shadow-sm"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
             title={f.desc}
+            className={`rounded px-2 py-0.5 text-2xs font-medium transition-colors ${
+              format === f.value
+                ? "bg-surface text-text-primary shadow-sm"
+                : "text-text-tertiary hover:text-text-secondary"
+            }`}
           >
             {f.label}
           </button>

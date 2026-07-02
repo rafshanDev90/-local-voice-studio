@@ -1,7 +1,7 @@
 "use client";
 
 import { doesNotMatch } from "assert";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { FaUpload } from "react-icons/fa";
 import {
@@ -15,6 +15,8 @@ import { useVoiceStore } from "~/stores/voice-store";
 import { ServiceType } from "~/types/services";
 
 const ALLOWED_AUDIO_TYPES = ["audio/mp3", "audio/wav"];
+const POLL_INTERVAL_MS = 500;
+const POLL_TIMEOUT_MS = 10 * 60 * 1000;
 
 export function VoiceChanger({
   credits,
@@ -27,9 +29,12 @@ export function VoiceChanger({
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentAudioId, setCurrentAudioId] = useState<string | null>(null);
+  const [pollError, setPollError] = useState<string | null>(null);
 
   const { playAudio } = useAudioStore();
   const getSelectedVoice = useVoiceStore((state) => state.getSelectedVoice);
+  const startedAtRef = useRef<number | null>(null);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const handleFileSelect = (selectedFile: File) => {
     const isAllowedAudio = ALLOWED_AUDIO_TYPES.includes(selectedFile.type);
@@ -79,23 +84,47 @@ export function VoiceChanger({
         });
       }
       setCurrentAudioId(audioId);
+      setPollError(null);
     } catch (error) {
       console.error("Error generating speech: ", error);
       setIsLoading(false);
     }
   };
 
+  const stopPolling = () => {
+    if (pollTimerRef.current) {
+      clearInterval(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+  };
+
+  const timedOutError = () => "Voice changing is taking longer than expected. Please try again.";
+
   useEffect(() => {
     if (!currentAudioId || !isLoading) return;
+    setPollError(null);
+    startedAtRef.current = Date.now();
 
-    const pollInterval = setInterval(async () => {
+    const clearTimedPoll = () => {
+      stopPolling();
+      setIsLoading(false);
+      setCurrentAudioId(null);
+      setPollError(timedOutError());
+    };
+
+    pollTimerRef.current = setInterval(async () => {
       try {
+        if (!startedAtRef.current || Date.now() - startedAtRef.current > POLL_TIMEOUT_MS) {
+          clearTimedPoll();
+          return;
+        }
+
         const status = await generationStatus(currentAudioId);
 
         const selectedVoice = getSelectedVoice("seedvc");
 
         if (status.success && status.audioUrl && selectedVoice) {
-          clearInterval(pollInterval);
+          stopPolling();
           setIsLoading(false);
 
           const newAudio = {
@@ -113,23 +142,21 @@ export function VoiceChanger({
           setCurrentAudioId(null);
           setFile(null);
         } else if (!status.success) {
-          clearInterval(pollInterval);
+          stopPolling();
           setIsLoading(false);
           setCurrentAudioId(null);
           console.error("Voice changing failed");
         }
       } catch (error) {
         console.error("Error polling for audio status: " + error);
-        clearInterval(pollInterval);
+        stopPolling();
         setIsLoading(false);
         setCurrentAudioId(null);
       }
-    }, 500);
+    }, POLL_INTERVAL_MS);
 
-    return () => {
-      clearInterval(pollInterval);
-    };
-  }, [currentAudioId, isLoading, getSelectedVoice, playAudio, file]);
+    return stopPolling;
+  }, [currentAudioId, isLoading, getSelectedVoice, playAudio, file, service, timedOutError]);
 
   return (
     <>
@@ -213,6 +240,9 @@ export function VoiceChanger({
           creditsRemaining={credits}
           buttonText="Convert Voice"
         />
+        {pollError && (
+          <p className="mt-2 text-sm text-red-600">{pollError}</p>
+        )}
       </div>
     </>
   );
