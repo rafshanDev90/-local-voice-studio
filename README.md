@@ -274,3 +274,50 @@ curl -X POST 'http://localhost:8000/api/generate?voice=af_bella' \
   <p>Built with Kokoro ONNX &middot; OpenFugu &middot; FastAPI</p>
   <p><strong>local-voice-studio</strong> &mdash; Local voiceovers for YouTube</p>
 </div>
+
+<hr>
+
+<h2>Local Portable Use</h2>
+
+<p>Windows users can run this without installing dependencies globally.</p>
+
+<h3>Option A - One-click start</h3>
+
+<pre>
+scripts\run.bat
+</pre>
+
+<h3>Option B - PowerShell</h3>
+
+<pre>
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+.\scripts\run.ps1
+</pre>
+
+<h3>First run missing setup?</h3>
+
+<pre>
+scripts\setup.bat
+scripts\download_models.bat
+</pre>
+
+<hr>
+
+<h2>Linux Portable Use</h2>
+
+<h3>Run locally</h3>
+
+<pre>
+scripts/setup.sh
+scripts/run.sh
+</pre>
+
+<h3>Package for others</h3>
+
+<pre>
+scripts/package_portable.sh
+# this creates a sibling folder ending in -portable
+# zip that folder and share it
+</pre>
+
+*Linux requirements:* Python 3.12+, Node.js 18+, `npm`, and `curl`.*
