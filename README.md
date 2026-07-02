@@ -277,6 +277,27 @@ curl -X POST 'http://localhost:8000/api/generate?voice=af_bella' \
 
 <hr>
 
+<h2>Download</h2>
+
+<p>Use the portable release instead of cloning if you just want to run it locally.</p>
+
+<ul>
+  <li>
+    <strong>Linux/macOS portable:</strong>
+    <a href="https://github.com/rafshanDev90/-local-voice-studio/releases/download/v0.1-linux-portable/local-voice-studio-v0.1-linux-portable.zip">
+      local-voice-studio-v0.1-linux-portable.zip
+    </a>
+  </li>
+</ul>
+
+<p>After downloading, extract the zip and run:</p>
+<ul>
+  <li>Linux/macOS: <code>./scripts/run.sh</code></li>
+  <li>Windows: <code>scripts\run.bat</code></li>
+</ul>
+
+<hr>
+
 <h2>Local Portable Use</h2>
 
 <p>Windows users can run this without installing dependencies globally.</p>
