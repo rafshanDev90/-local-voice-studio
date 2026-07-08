@@ -23,16 +23,19 @@ export default function AppHomePage() {
           <Sidebar />
         </div>
 
-        <div className="flex flex-1 flex-col overflow-hidden bg-surface-secondary/60">
-          <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-border bg-white/70 backdrop-blur-sm px-6 lg:px-10">
+        <div className="flex flex-1 flex-col overflow-hidden bg-brand-cream/70">
+          {/* Unified header — brand left, status right */}
+          <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-border/70 bg-white/70 backdrop-blur-sm px-6 lg:px-10">
             <div className="flex items-center gap-3">
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gray-900 text-[11px] font-bold text-white">
-                12
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-maroon text-[11px] font-bold text-white">
+                RV
               </span>
-              <span className="text-sm font-medium text-text-primary">Rajshahi Voice Studio</span>
+              <span className="text-sm font-medium text-text-primary">
+                Rajshahi Voice Studio
+              </span>
             </div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-white/60 px-3 py-1 text-[11px] text-text-secondary">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/60 bg-emerald-50/80 px-3 py-1 text-[11px] font-medium text-brand-emerald">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-emerald" />
               All systems online
             </div>
           </header>
@@ -41,20 +44,22 @@ export default function AppHomePage() {
             <div className="px-6 py-20 lg:px-12 xl:px-20">
               {/* Hero */}
               <div className="mb-20 max-w-3xl">
-                <p className="mb-4 text-sm font-medium uppercase tracking-widest text-amber-700/70">
+                <p className="mb-5 flex items-center gap-2 text-sm font-medium uppercase tracking-[0.15em] text-brand-mustard/80">
+                  <span lang="bn">রাজশাহী</span>
+                  <span className="h-3 w-px bg-brand-mustard/30" />
                   Made in Rajshahi
                 </p>
-                <h2 className="text-5xl font-bold leading-tight tracking-tight text-text-primary md:text-6xl lg:text-7xl">
+                <h2 className="text-5xl font-bold leading-tight tracking-tighter text-text-primary md:text-6xl lg:text-7xl">
                   Local AI tools,
                   <br />
-                  <span className="bg-gradient-to-r from-text-primary via-amber-900 to-text-primary bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-brand-maroon via-brand-mustard to-text-primary bg-clip-text text-transparent">
                     powered by the Padma
                   </span>
                 </h2>
                 <p className="mt-6 max-w-xl text-base leading-relaxed text-text-secondary">
-                  Professional voice synthesis, video transcription, and short-form
-                  content generation — running entirely on your machine. Zero API
-                  costs, zero data leaving your computer.
+                  Professional voice synthesis, video transcription, and
+                  short-form content generation — running entirely on your
+                  machine. Zero API costs, zero data leaving your computer.
                 </p>
               </div>
 
@@ -79,7 +84,7 @@ export default function AppHomePage() {
                     </svg>
                   }
                   title="Video Summarizer"
-                  description="Transcribe and summarize YouTube videos or local files. Get concise summaries with smart chapter detection."
+                  description="Transcribe and summarize YouTube videos or local files. Get concise summaries in your preferred language."
                   href="/app/video-summarizer"
                   status="soon"
                 />
@@ -90,24 +95,24 @@ export default function AppHomePage() {
                     </svg>
                   }
                   title="Shorts Generator"
-                  description="Extract viral-ready 9:16 clips from any YouTube video. AI-powered highlight detection with smart vertical cropping."
+                  description="Extract viral-ready 9:16 clips from any YouTube video. AI-powered highlight detection and smart cropping."
                   href="/app/shorts-generator"
                   status="soon"
                 />
               </div>
 
-              {/* Tech stack badges */}
+              {/* Tech stack */}
               <div className="border-t border-border/50 pt-10">
-                <p className="mb-5 text-xs font-medium uppercase tracking-widest text-text-tertiary">
+                <p className="mb-5 text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary">
                   Powered by
                 </p>
                 <div className="flex flex-wrap gap-3">
                   {techStack.map((tech) => (
                     <div
                       key={tech.name}
-                      className="inline-flex items-center gap-2 rounded-lg border border-border bg-white/50 px-3.5 py-2 text-xs text-text-secondary backdrop-blur-sm"
+                      className="inline-flex items-center gap-2 rounded-lg border border-border/70 bg-white/60 px-3.5 py-2 text-xs text-text-secondary"
                     >
-                      <span className="text-text-primary font-medium">{tech.name}</span>
+                      <span className="font-medium text-text-primary">{tech.name}</span>
                       <span className="text-text-tertiary">·</span>
                       <span>{tech.desc}</span>
                     </div>

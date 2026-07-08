@@ -52,7 +52,7 @@ export function PageLayout({
 
   return (
     <PadmaBank variant="subtle">
-    <div className="flex h-screen bg-surface-secondary/70">
+    <div className="flex h-screen bg-brand-cream/70">
       <div className="hidden lg:block">
         <Sidebar />
       </div>

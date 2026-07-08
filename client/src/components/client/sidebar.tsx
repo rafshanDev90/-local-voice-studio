@@ -51,8 +51,8 @@ export default function Sidebar({ isMobile = false }: { isMobile?: boolean }) {
       onMouseLeave={() => !isMobile && setIsHovered(false)}
     >
       <div className="flex items-center justify-between">
-        <h1 className={`text-xl font-bold ${!isExpanded && "hidden"}`}>
-          12TwelveLabs
+        <h1 className={`text-lg font-bold tracking-tight ${!isExpanded && "hidden"}`}>
+          Rajshahi VS
         </h1>
         {!isMobile && (
           <button
@@ -67,7 +67,7 @@ export default function Sidebar({ isMobile = false }: { isMobile?: boolean }) {
                 <IoPinOutline className="h-5 w-5" />
               ) : (
                 <div className="flex h-fit w-fit items-center justify-center rounded-lg bg-white px-3 py-2 shadow">
-                  <span className="text-md font-bold text-black">12</span>
+                  <span className="text-md font-bold text-black">RV</span>
                 </div>
               )}
             </div>

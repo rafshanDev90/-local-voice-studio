@@ -121,6 +121,64 @@ export const Landmarks = {
     </svg>
   ),
 
+  // ── Puthia Temple Complex (পুঠিয়া মন্দির) ──
+  // Ornate terracotta temple with tall curved shikhara spire, multi-pinnacle top
+  PuthiaTemple: ({ className }: { className?: string }) => (
+    <svg
+      className={className}
+      viewBox="0 0 240 340"
+      preserveAspectRatio="xMidYMid meet"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Base platform */}
+      <rect x="20" y="300" width="200" height="20" rx="2" />
+      <rect x="30" y="290" width="180" height="14" rx="1" />
+      <rect x="40" y="282" width="160" height="12" rx="1" />
+
+      {/* Main temple body */}
+      <rect x="50" y="160" width="140" height="124" rx="2" />
+
+      {/* Central arched entrance */}
+      <rect x="95" y="210" width="50" height="74" />
+      <path d="M95 210 Q120 185 145 210" />
+
+      {/* Side arched niches */}
+      <path d="M58 200 Q68 188 78 200 L78 220 L58 220 Z" />
+      <path d="M162 200 Q172 188 182 200 L182 220 L162 220 Z" />
+
+      {/* Terracotta decorative bands */}
+      <rect x="50" y="210" width="140" height="3" />
+      <rect x="50" y="240" width="140" height="3" />
+      <rect x="50" y="265" width="140" height="3" />
+
+      {/* Stepped tower base */}
+      <rect x="65" y="140" width="110" height="24" />
+      <rect x="75" y="120" width="90" height="24" />
+
+      {/* Main shikhara (curved spire) */}
+      <path d="M75 120 Q120 20 120 10 Q120 20 165 120" />
+
+      {/* Spire pinnacle / amalaka */}
+      <rect x="114" y="6" width="12" height="10" rx="1" />
+      <circle cx="120" cy="4" r="5" />
+
+      {/* Side mini spires (small shikharas) */}
+      <path d="M65 140 Q60 120 55 115 Q62 120 67 138" />
+      <path d="M175 140 Q180 120 185 115 Q178 120 173 138" />
+
+      {/* Mini pinnacle tops */}
+      <rect x="53" y="112" width="4" height="6" />
+      <rect x="183" y="112" width="4" height="6" />
+
+      {/* Upper band below spire */}
+      <rect x="70" y="140" width="100" height="4" />
+
+      {/* Window / grill details on upper tower */}
+      <rect x="110" y="155" width="20" height="14" rx="3" />
+      <line x1="120" y1="155" x2="120" y2="169" />
+    </svg>
+  ),
+
   // ── Boro Kuthi (বড় কুঠি) ──
   // Historic Dutch trading post gateway — grand arch, geometric pattern
   BoroKuthi: ({ className }: { className?: string }) => (
