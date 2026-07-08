@@ -21,7 +21,6 @@ RUN curl -fL -o /app/server/models/voices.bin \
     https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/voices.bin
 
 COPY server/ server/
-COPY scripts/ scripts/
 
 RUN mkdir -p /app/server/output
 

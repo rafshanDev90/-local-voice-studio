@@ -11,6 +11,7 @@ import { SpeechSidebar } from "./speech-synthesis/right-sidebar";
 import Playbar from "./playbar";
 import { useAudioStore } from "~/stores/audio-store";
 import { MobileSettingsButton } from "./speech-synthesis/mobile-settings-button";
+import { PadmaBank } from "./rajshahi/padma-bank";
 
 interface TabItem {
   name: string;
@@ -50,7 +51,8 @@ export function PageLayout({
   }, [setMobileScreen]);
 
   return (
-    <div className="flex h-screen bg-surface-secondary">
+    <PadmaBank variant="subtle">
+    <div className="flex h-screen bg-surface-secondary/70">
       <div className="hidden lg:block">
         <Sidebar />
       </div>
@@ -77,7 +79,7 @@ export function PageLayout({
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-14 flex-shrink-0 items-center gap-3 border-b border-border bg-surface px-5">
+        <header className="flex h-14 flex-shrink-0 items-center gap-3 border-b border-border bg-white/80 backdrop-blur-sm px-5">
           {isMobileScreen && (
             <button
               onClick={toggleMobileDrawer}
@@ -109,7 +111,7 @@ export function PageLayout({
 
         <div className="flex flex-1 min-h-0 overflow-hidden">
           <main className="flex-1 overflow-y-auto">
-            <div className="mx-auto flex h-full max-w-5xl flex-col p-5 md:p-6 lg:p-8">
+            <div className="flex h-full flex-col p-5 md:p-6 lg:p-8">
               {children}
             </div>
           </main>
@@ -130,5 +132,6 @@ export function PageLayout({
         )}
       </div>
     </div>
+    </PadmaBank>
   );
 }

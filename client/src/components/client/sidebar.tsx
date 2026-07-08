@@ -6,12 +6,12 @@ import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import {
   IoChatboxOutline,
+  IoHomeOutline,
   IoMicOutline,
   IoMusicalNotesOutline,
   IoPersonOutline,
   IoPinOutline,
 } from "react-icons/io5";
-import { isBoxedPrimitive } from "util/types";
 
 export default function Sidebar({ isMobile = false }: { isMobile?: boolean }) {
   const pathname = usePathname();
@@ -76,7 +76,15 @@ export default function Sidebar({ isMobile = false }: { isMobile?: boolean }) {
       </div>
 
       {/* Navigation */}
-      <nav className="mt-8 flex flex-1 flex-col">
+      <nav className="mt-6 flex flex-1 flex-col">
+        <SidebarButton
+          icon={<IoHomeOutline />}
+          isExpanded={isExpanded}
+          isActive={pathname === "/app"}
+          href="/app"
+        >
+          Home
+        </SidebarButton>
         <SectionHeader isExpanded={isExpanded}>Playground</SectionHeader>
         <SidebarButton
           icon={<IoChatboxOutline />}
@@ -86,22 +94,7 @@ export default function Sidebar({ isMobile = false }: { isMobile?: boolean }) {
         >
           Text to Speech
         </SidebarButton>
-        <SidebarButton
-          icon={<IoMicOutline />}
-          isExpanded={isExpanded}
-          isActive={pathname.includes("/app/speech-synthesis/speech-to-speech")}
-          href="/app/speech-synthesis/speech-to-speech"
-        >
-          Voice Changer
-        </SidebarButton>
-        <SidebarButton
-          icon={<IoMusicalNotesOutline />}
-          isExpanded={isExpanded}
-          isActive={pathname.includes("/app/sound-effects")}
-          href="/app/sound-effects/generate"
-        >
-          Sound Effects
-        </SidebarButton>
+   
       </nav>
 
       {/* Bottom Section */}
