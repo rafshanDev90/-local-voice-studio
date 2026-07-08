@@ -5,6 +5,9 @@ venv/
 secrets*
 doc/
 .antigravity/
+.hermes/
+scripts/
+README_LOCAL.txt
 # Temp audio output
 *.wav
 *.mp3

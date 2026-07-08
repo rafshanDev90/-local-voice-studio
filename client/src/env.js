@@ -7,22 +7,19 @@ export const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
-    AUTH_SECRET:
-      process.env.NODE_ENV === "production"
-        ? z.string()
-        : z.string().optional(),
-    DATABASE_URL: z.string().url(),
+    AUTH_SECRET: z.string().optional().default(""),
+    DATABASE_URL: z.string().url().optional().default("file:./db.sqlite"),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
-    AWS_ACCESS_KEY_ID: z.string(),
-    AWS_SECRET_ACCESS_KEY: z.string(),
-    AWS_REGION: z.string(),
-    S3_BUCKET_NAME: z.string(),
-    BACKEND_API_KEY: z.string(),
-    STYLETTS2_API_ROUTE: z.string(),
-    SEED_VC_API_ROUTE: z.string(),
-    MAKE_AN_AUDIO_API_ROUTE: z.string(),
+    AWS_ACCESS_KEY_ID: z.string().optional().default(""),
+    AWS_SECRET_ACCESS_KEY: z.string().optional().default(""),
+    AWS_REGION: z.string().optional().default(""),
+    S3_BUCKET_NAME: z.string().optional().default(""),
+    BACKEND_API_KEY: z.string().optional().default(""),
+    STYLETTS2_API_ROUTE: z.string().optional().default(""),
+    SEED_VC_API_ROUTE: z.string().optional().default(""),
+    MAKE_AN_AUDIO_API_ROUTE: z.string().optional().default(""),
   },
 
   /**

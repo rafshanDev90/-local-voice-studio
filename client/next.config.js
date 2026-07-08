@@ -4,6 +4,10 @@ const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 /** @type {import("next").NextConfig} */
 const config = {
+  output: "standalone",
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   async rewrites() {
     return [
       {

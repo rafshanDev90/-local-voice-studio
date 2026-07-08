@@ -194,13 +194,13 @@ export function TextToSpeechEditor({
         </div>
       </div>
 
-      <div className="relative min-h-[320px] flex-1 px-3 py-3 md:px-5 md:py-5">
+      <div className="relative min-h-[160px] flex-1 px-3 py-3 md:px-5 md:py-4">
         <textarea
           value={textContent}
           onChange={(e) => setTextContent(e.target.value)}
           placeholder={activePlaceholder}
           disabled={loading}
-          className="h-full min-h-[320px] w-full resize-none rounded-xl border border-gray-200 bg-white p-5 text-base leading-7 text-gray-950 shadow-sm outline-none transition placeholder:font-light placeholder:text-gray-400 focus:border-gray-300 focus:ring-4 focus:ring-gray-900/5 disabled:cursor-wait disabled:bg-gray-50 md:p-6"
+          className="h-full min-h-[160px] w-full resize-none rounded-xl border border-gray-200 bg-white p-4 text-base leading-6 text-gray-950 shadow-sm outline-none transition placeholder:font-light placeholder:text-gray-400 focus:border-gray-300 focus:ring-4 focus:ring-gray-900/5 disabled:cursor-wait disabled:bg-gray-50 md:p-5"
         />
       </div>
 

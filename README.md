@@ -43,52 +43,76 @@
 <h2>Architecture</h2>
 
 <pre>
-                           ┌──────────────────────────────────┐
-                           │         FastAPI Server           │
-                           │                                  │
-Script (.txt) ───────────►│  ┌─────────────┐  ┌────────────┐ │
-JSON body ────────────────►│  │ optimizer   │─►│ tts_engine │─► .wav
-                           │  │ (Ollama)    │  │ (Kokoro)   │ │
-                           │  └──────┬──────┘  └────────────┘ │
-                           │         │                          │
-                           │  ┌──────▼────────┐               │
-                           │  │ orchestrator   │  OpenFugu      │
-                           │  │ FuguRouter     │  (optional)    │
-                           │  └───────────────┘               │
-                           └──────────────────────────────────┘
+                            ┌──────────────────────────────────┐
+                            │         FastAPI Server           │
+                            │                                  │
+ Script (.txt) ───────────►│  ┌─────────────┐  ┌────────────┐ │
+ JSON body ────────────────►│  │ optimizer   │─►│ tts_engine │─► .wav
+                            │  │ (Ollama)    │  │ (Kokoro)   │ │
+                            │  └──────┬──────┘  └────────────┘ │
+                            │         │                          │
+                            │  ┌──────▼────────┐               │
+                            │  │ orchestrator   │  OpenFugu      │
+                            │  │ FuguRouter     │  (optional)    │
+                            │  └───────────────┘               │
+                            └──────────────────────────────────┘
+
+  ┌──────────┐     ┌──────────┐     ┌──────────────┐
+  │  Redis   │     │ Backend  │     │   Frontend    │
+  │ (cache)  │◄────│(FastAPI) │◄────│  (Next.js)   │
+  │ :6379    │     │ :8000    │     │ :3000         │
+  └──────────┘     └──────────┘     └──────────────┘
+         ▲               ▲                  ▲
+         └───────────────┴──────────────────┘
+                    Docker Compose
 </pre>
 
 <hr>
 
+<h2>Prerequisites</h2>
+
+<ul>
+  <li><strong>Docker</strong> &amp; <strong>Docker Compose v2</strong></li>
+  <li><strong>MongoDB Atlas</strong> cluster (free tier) — used for auth and history</li>
+</ul>
+
 <h2>Quick Start</h2>
 
-<h3>1. Clone &amp; set up</h3>
+<h3>1. Clone</h3>
 
 <pre>
 git clone https://github.com/your-username/local-voice-studio.git
 cd local-voice-studio
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
 </pre>
 
-<h3>2. Download models</h3>
+<h3>2. Configure MongoDB</h3>
+
+<p>Create a <code>.env</code> file in the project root:</pre>
 
 <pre>
-bash scripts/download_models.sh
+MONGO_URL=mongodb+srv://&lt;user&gt;:&lt;password&gt;@&lt;cluster&gt;.mongodb.net/
+MONGO_DB_NAME=local-voice-studio
 </pre>
 
-<h3>3. Start the server</h3>
+<h3>3. Start all services</h3>
 
 <pre>
-python -m server
+docker compose up -d
 </pre>
 
-<h3>4. Generate voiceover</h3>
+<p>This builds and starts three containers:</p>
+<table>
+  <tr><th>Service</th><th>Port</th><th>Description</th></tr>
+  <tr><td><code>frontend</code></td><td><code>:3000</code></td><td>Next.js UI — <a href="http://localhost:3000">http://localhost:3000</a></td></tr>
+  <tr><td><code>backend</code></td><td><code>:8000</code></td><td>FastAPI API — <a href="http://localhost:8000/health">http://localhost:8000/health</a></td></tr>
+  <tr><td><code>redis</code></td><td>internal</td><td>Session cache</td></tr>
+</table>
+
+<h3>4. Verify</h3>
 
 <pre>
-curl -X POST 'http://localhost:8000/api/generate?voice=af_bella' \
-  -H 'Content-Type: application/json' \
-  -d '{"text":"Your script goes here."}' -o output.wav
+curl http://localhost:8000/health
+# → {"status":"ok"}
 </pre>
 
 <hr>
@@ -274,71 +298,3 @@ curl -X POST 'http://localhost:8000/api/generate?voice=af_bella' \
   <p>Built with Kokoro ONNX &middot; OpenFugu &middot; FastAPI</p>
   <p><strong>local-voice-studio</strong> &mdash; Local voiceovers for YouTube</p>
 </div>
-
-<hr>
-
-<h2>Download</h2>
-
-<p>Use the portable release instead of cloning if you just want to run it locally.</p>
-
-<ul>
-  <li>
-    <strong>Linux/macOS portable:</strong>
-    <a href="https://github.com/rafshanDev90/-local-voice-studio/releases/download/v0.1-linux-portable/local-voice-studio-v0.1-linux-portable.zip">
-      local-voice-studio-v0.1-linux-portable.zip
-    </a>
-  </li>
-</ul>
-
-<p>After downloading, extract the zip and run:</p>
-<ul>
-  <li>Linux/macOS: <code>./scripts/run.sh</code></li>
-  <li>Windows: <code>scripts\run.bat</code></li>
-</ul>
-
-<hr>
-
-<h2>Local Portable Use</h2>
-
-<p>Windows users can run this without installing dependencies globally.</p>
-
-<h3>Option A - One-click start</h3>
-
-<pre>
-scripts\run.bat
-</pre>
-
-<h3>Option B - PowerShell</h3>
-
-<pre>
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-.\scripts\run.ps1
-</pre>
-
-<h3>First run missing setup?</h3>
-
-<pre>
-scripts\setup.bat
-scripts\download_models.bat
-</pre>
-
-<hr>
-
-<h2>Linux Portable Use</h2>
-
-<h3>Run locally</h3>
-
-<pre>
-scripts/setup.sh
-scripts/run.sh
-</pre>
-
-<h3>Package for others</h3>
-
-<pre>
-scripts/package_portable.sh
-# this creates a sibling folder ending in -portable
-# zip that folder and share it
-</pre>
-
-*Linux requirements:* Python 3.12+, Node.js 18+, `npm`, and `curl`.*

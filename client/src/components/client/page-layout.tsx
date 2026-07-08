@@ -107,7 +107,7 @@ export function PageLayout({
           )}
         </header>
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 min-h-0 overflow-hidden">
           <main className="flex-1 overflow-y-auto">
             <div className="mx-auto flex h-full max-w-5xl flex-col p-5 md:p-6 lg:p-8">
               {children}
@@ -123,7 +123,11 @@ export function PageLayout({
           <MobileSettingsButton toggleMobileMenu={toggleMobileMenu} />
         )}
 
-        {currentAudio && <Playbar />}
+        {currentAudio && (
+          <div className="flex-shrink-0">
+            <Playbar />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -15,9 +15,9 @@ const services = {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string[] } },
+  { params }: { params: Promise<{ slug: string[] }> },
 ) {
-  const slug = await params.slug;
+  const { slug } = await params;
   const [service, endpoint] = slug;
 
   if (!services[service as keyof typeof services]) {
@@ -42,10 +42,9 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string[] } },
+  { params }: { params: Promise<{ slug: string[] }> },
 ) {
-  const awaitedParams = await params;
-  const slug = awaitedParams.slug;
+  const { slug } = await params;
   const [service] = slug;
 
   if (!services[service as keyof typeof services]) {

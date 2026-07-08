@@ -4,6 +4,8 @@ uvicorn==0.34.0
 soundfile==0.13.1
 numpy==2.2.3
 kokoro-onnx==0.4.3
+edge-tts>=6.0.0
+python-multipart>=0.0.20
 
 # LLM script optimization
 httpx==0.28.1
