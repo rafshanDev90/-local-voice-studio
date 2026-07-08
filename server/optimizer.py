@@ -5,6 +5,8 @@ from typing import Any
 
 import httpx
 
+from server.pronunciation import normalize_technical_text, enhance_prosody
+
 OLLAMA_BASE_URL = "http://localhost:11434"
 OLLAMA_MODEL = "llama3.2:3b"
 
@@ -70,6 +72,9 @@ def split_content_by_language(text: str) -> list[tuple[str, str]]:
 def optimize_script(text: str) -> list[str]:
     if contains_bangla(text):
         return split_into_sentences(text)
+
+    text = normalize_technical_text(text)
+    text = enhance_prosody(text)
 
     try:
         response = httpx.post(
