@@ -6,7 +6,6 @@ import { useAudioConfig } from "~/stores/audio-config";
 import { generateAudiobook, type Chapter } from "~/lib/audiobook";
 import { AudiobookPlayer } from "~/components/client/audiobook/audiobook-player";
 import { AudiobookCatalog } from "~/components/client/audiobook/audiobook-catalog";
-import type { HistoryItem } from "~/lib/history";
 import { IoLanguageOutline, IoBookOutline, IoLibraryOutline } from "react-icons/io5";
 
 type Tab = "generate" | "library";
@@ -22,7 +21,6 @@ export function AudiobookEditor() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedVoice = useVoiceStore((s) => s.selectedVoices.styletts2);
-  const selectVoice = useVoiceStore((s) => s.selectVoice);
   const selectedLanguage = useVoiceStore((s) => s.selectedLanguage);
   const setSelectedLanguage = useVoiceStore((s) => s.setSelectedLanguage);
   const getVoices = useVoiceStore((s) => s.getVoices);
@@ -74,38 +72,6 @@ export function AudiobookEditor() {
     a.download = "audiobook.mp3";
     a.click();
   }, [audioUrl]);
-
-  const handlePlayFromLibrary = useCallback(
-    async (item: HistoryItem) => {
-      setTab("generate");
-      setText(item.text ?? "");
-      if (item.voice) {
-        selectVoice("styletts2", item.voice);
-      }
-      if (item.language) {
-        setSelectedLanguage(item.language);
-      }
-      try {
-        const res = await fetch(item.audioUrl);
-        if (!res.ok) return;
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        let ch: Chapter[] = [];
-        const raw = item.chapters;
-        if (typeof raw === "string") {
-          try { ch = JSON.parse(raw); } catch { /* */ }
-        } else if (Array.isArray(raw)) {
-          ch = raw;
-        }
-        setAudioUrl(url);
-        setChapters(ch);
-        setChapterIndex(0);
-      } catch {
-        /* ignore */
-      }
-    },
-    [selectVoice, setSelectedLanguage],
-  );
 
   const displayChapters =
     chapters.length > 0
@@ -267,7 +233,7 @@ export function AudiobookEditor() {
         </>
       ) : (
         <div className="flex-1 overflow-y-auto px-4 py-5 md:px-6">
-          <AudiobookCatalog onPlay={handlePlayFromLibrary} />
+          <AudiobookCatalog />
         </div>
       )}
     </div>
