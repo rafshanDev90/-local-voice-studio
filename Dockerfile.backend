@@ -14,11 +14,8 @@ COPY server/requirements.txt .
 RUN python -m pip install --upgrade pip setuptools wheel \
     && pip install --no-cache-dir -r requirements.txt
 
+# Create the directory inside the container
 RUN mkdir -p /app/server/models
-RUN curl -fL -o /app/server/models/kokoro-v0_19.onnx \
-    https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/kokoro-v0_19.onnx
-RUN curl -fL -o /app/server/models/voices.bin \
-    https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/voices.bin
 
 COPY server/ server/
 

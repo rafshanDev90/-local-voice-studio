@@ -33,3 +33,4 @@ client/.env
 test_script.txt
 test_script.txt
 client/node_modules/caniuse-lite/data/features/css-supports-api.js
+.aider*

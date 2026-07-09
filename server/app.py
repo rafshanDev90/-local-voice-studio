@@ -219,15 +219,81 @@ async def generate_audiobook(
     fmt_info = FORMATS[format]
     out_stem = uuid.uuid4().hex
     out_path = write_audio(OUTPUT_DIR, out_stem, audio, sr, format)
+    out_name = os.path.basename(out_path)
 
     import json
     chapters_json = json.dumps(chapters)
+    headers = {"X-Chapters": chapters_json}
+
+    try:
+        voice_name = next((v["name"] for v in VOICES_CATALOG if v["id"] == voice), voice)
+        detected = VOICE_LANG_MAP.get(voice, "en-us")
+        history_id = await save_voice_history(
+            user_id=None,
+            text=text,
+            voice_id=voice,
+            voice_name=voice_name,
+            audio_path=out_name,
+            service="audiobook",
+            language=detected,
+        )
+        if history_id:
+            from server.database import get_db
+            from bson import ObjectId
+            db = get_db()
+            await db.voice_history.update_one(
+                {"_id": ObjectId(history_id)},
+                {"$set": {"chapters": chapters_json, "isAudiobook": True, "coverImage": None}},
+            )
+            headers["X-History-Id"] = history_id
+    except Exception:
+        pass
+
     return FileResponse(
         out_path,
         media_type=fmt_info["mime"],
         filename=f"audiobook{fmt_info['ext']}",
-        headers={"X-Chapters": chapters_json},
+        headers=headers,
     )
+
+
+COVERS_DIR = os.path.join(os.path.dirname(__file__), "covers")
+os.makedirs(COVERS_DIR, exist_ok=True)
+
+ALLOWED_COVER_TYPES = {"image/jpeg", "image/png", "image/webp"}
+
+
+@app.post("/api/audiobook/{history_id}/cover")
+async def upload_audiobook_cover(history_id: str, file: UploadFile = File(...)):
+    if file.content_type not in ALLOWED_COVER_TYPES:
+        raise HTTPException(422, "Only JPEG, PNG, and WebP images are accepted")
+    item = await get_voice_history_item(history_id)
+    if not item:
+        raise HTTPException(404, "Audiobook not found")
+    ext = file.filename.rsplit(".", 1)[-1] if "." in (file.filename or "") else "webp"
+    cover_path = os.path.join(COVERS_DIR, f"{history_id}.{ext}")
+    contents = await file.read()
+    with open(cover_path, "wb") as f:
+        f.write(contents)
+    cover_url = f"/api/audiobook/{history_id}/cover"
+    from server.database import get_db
+    from bson import ObjectId
+    db = get_db()
+    await db.voice_history.update_one(
+        {"_id": ObjectId(history_id)},
+        {"$set": {"coverImage": cover_url}},
+    )
+    return {"coverUrl": cover_url}
+
+
+@app.get("/api/audiobook/{history_id}/cover")
+async def serve_audiobook_cover(history_id: str):
+    for ext in ("jpg", "jpeg", "png", "webp"):
+        cover_path = os.path.join(COVERS_DIR, f"{history_id}.{ext}")
+        if os.path.exists(cover_path):
+            media = f"image/{'jpeg' if ext in ('jpg','jpeg') else 'png' if ext == 'png' else 'webp'}"
+            return FileResponse(cover_path, media_type=media)
+    raise HTTPException(404, "Cover not found")
 
 
 @app.get("/api/history")

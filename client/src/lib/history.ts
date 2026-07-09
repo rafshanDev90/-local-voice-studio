@@ -1,3 +1,5 @@
+import type { Chapter } from "~/lib/audiobook";
+
 export interface HistoryItem {
   id: string;
   text: string | null;
@@ -12,6 +14,8 @@ export interface HistoryItem {
   createdAt: string;
   date: string;
   time: string;
+  coverImage?: string | null;
+  chapters?: string | Chapter[];
 }
 
 export interface HistoryResponse {
