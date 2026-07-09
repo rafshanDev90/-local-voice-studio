@@ -11,6 +11,7 @@ from server.audio_formats import FORMATS, write_audio
 from server.exceptions import TTSModelError, TTSGenerationError, TTSAudioError
 from server.tts_engine import TTSEngine, is_bangla_voice, is_edge_tts_voice, generate_edge_tts, detect_language
 from server.optimizer import optimize_script
+from server.audiobook import process_audiobook
 from server.database import connect, disconnect, save_voice_history, list_voice_history, get_voice_history_item, delete_voice_history
 
 logger = logging.getLogger("voice-agent")
@@ -192,6 +193,40 @@ async def generate_json(
             "X-Language-Detected": detected,
             "X-History-Id": str(history_id) if history_id else "",
         },
+    )
+
+
+@app.post("/api/audiobook")
+async def generate_audiobook(
+    text: str = Body(..., embed=True),
+    voice: str = Query("af_bella"),
+    speed: float = Query(1.0, ge=0.5, le=2.0),
+    format: str = Query("mp3", pattern="^(wav|mp3|ogg|flac)$"),
+):
+    if not text.strip():
+        raise HTTPException(400, "Text is empty")
+    if engine is None:
+        raise HTTPException(503, "TTS engine not initialized")
+
+    try:
+        audio, sr, chapters = await process_audiobook(text, voice, speed, engine)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        logger.error("Audiobook generation failed: %s", e, exc_info=True)
+        raise HTTPException(500, "Audiobook generation failed")
+
+    fmt_info = FORMATS[format]
+    out_stem = uuid.uuid4().hex
+    out_path = write_audio(OUTPUT_DIR, out_stem, audio, sr, format)
+
+    import json
+    chapters_json = json.dumps(chapters)
+    return FileResponse(
+        out_path,
+        media_type=fmt_info["mime"],
+        filename=f"audiobook{fmt_info['ext']}",
+        headers={"X-Chapters": chapters_json},
     )
 
 

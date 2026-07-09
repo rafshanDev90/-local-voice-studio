@@ -91,13 +91,15 @@ export default function AppHomePage() {
                 <ServiceCard
                   icon={
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6">
-                      <path d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
+                      <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
+                      <circle cx="18" cy="18" r="3" />
+                      <path d="M21 21l1.5 1.5" />
                     </svg>
                   }
-                  title="Shorts Generator"
-                  description="Extract viral-ready 9:16 clips from any YouTube video. AI-powered highlight detection and smart cropping."
-                  href="/app/shorts-generator"
-                  status="soon"
+                  title="Audiobook"
+                  description="Turn books, articles, and long-form text into narrated audiobooks with chapter navigation and smart prosody."
+                  href="/app/audiobook"
+                  status="ready"
                 />
               </div>
 

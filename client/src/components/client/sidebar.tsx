@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import {
+  IoBookOutline,
   IoChatboxOutline,
   IoHomeOutline,
   IoMicOutline,
@@ -85,7 +86,7 @@ export default function Sidebar({ isMobile = false }: { isMobile?: boolean }) {
         >
           Home
         </SidebarButton>
-        <SectionHeader isExpanded={isExpanded}>Playground</SectionHeader>
+        <SectionHeader isExpanded={isExpanded}>Content</SectionHeader>
         <SidebarButton
           icon={<IoChatboxOutline />}
           isExpanded={isExpanded}
@@ -94,7 +95,15 @@ export default function Sidebar({ isMobile = false }: { isMobile?: boolean }) {
         >
           Text to Speech
         </SidebarButton>
-   
+        <SidebarButton
+          icon={<IoBookOutline />}
+          isExpanded={isExpanded}
+          isActive={pathname.includes("/app/audiobook")}
+          href="/app/audiobook"
+        >
+          Audiobook
+        </SidebarButton>
+    
       </nav>
 
       {/* Bottom Section */}

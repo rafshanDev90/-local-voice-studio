@@ -125,7 +125,7 @@ export function PageLayout({
           <MobileSettingsButton toggleMobileMenu={toggleMobileMenu} />
         )}
 
-        {currentAudio && (
+        {currentAudio && !pathname.includes("/app/audiobook") && (
           <div className="flex-shrink-0">
             <Playbar />
           </div>

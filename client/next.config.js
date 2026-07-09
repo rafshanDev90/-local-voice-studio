@@ -1,6 +1,6 @@
 import "./src/env.js";
 
-const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
 /** @type {import("next").NextConfig} */
 const config = {
@@ -21,6 +21,10 @@ const config = {
       {
         source: "/api/generate-voice",
         destination: `${BACKEND}/api/generate-voice`,
+      },
+      {
+        source: "/api/audiobook",
+        destination: `${BACKEND}/api/audiobook`,
       },
       {
         source: "/api/history",
