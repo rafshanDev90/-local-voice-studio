@@ -20,6 +20,7 @@ services:
     environment:
       - MONGO_URL=${MONGO_URL}
       - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
       - UVICORN_RELOAD=0
     volumes:
       - backend_output:/app/server/output

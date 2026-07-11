@@ -24,7 +24,6 @@ ENV HOST=0.0.0.0
 ENV PORT=8000
 ENV MONGO_URL=mongodb+srv://inspiremedaily47_db_user:Backend321@cluster0.acucsu1.mongodb.net/Agent?retryWrites=true&w=majority&appName=Cluster0
 ENV MONGO_DB_NAME=Agent
-ENV OLLAMA_BASE_URL=http://ollama:11434
 ENV UVICORN_RELOAD=0
 
 EXPOSE 8000

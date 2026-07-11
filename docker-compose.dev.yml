@@ -5,5 +5,7 @@ services:
       dockerfile: Dockerfile.backend
     volumes:
       - ./server:/app/server
+      - ./.env:/app/.env
     environment:
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
       - UVICORN_RELOAD=1

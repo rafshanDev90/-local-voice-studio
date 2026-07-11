@@ -8,8 +8,7 @@ import { IoClose, IoMenu } from "react-icons/io5";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SpeechSidebar } from "./speech-synthesis/right-sidebar";
-import Playbar from "./playbar";
-import { useAudioStore } from "~/stores/audio-store";
+
 import { MobileSettingsButton } from "./speech-synthesis/mobile-settings-button";
 import { PadmaBank } from "./rajshahi/padma-bank";
 
@@ -40,7 +39,6 @@ export function PageLayout({
     setMobileScreen,
     toggleMobileMenu,
   } = useUIStore();
-  const { currentAudio } = useAudioStore();
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -125,11 +123,7 @@ export function PageLayout({
           <MobileSettingsButton toggleMobileMenu={toggleMobileMenu} />
         )}
 
-        {currentAudio && !pathname.includes("/app/audiobook") && (
-          <div className="flex-shrink-0">
-            <Playbar />
-          </div>
-        )}
+
       </div>
     </div>
     </PadmaBank>
