@@ -6,6 +6,7 @@ numpy==2.2.3
 kokoro-onnx==0.4.3
 edge-tts>=6.0.0
 python-multipart>=0.0.20
+python-dotenv>=1.0.0
 
 # LLM script optimization
 httpx==0.28.1

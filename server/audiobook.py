@@ -133,7 +133,10 @@ async def process_audiobook(
         try:
             if use_edge:
                 full_text = " ".join(normalized)
-                audio, sr = await generate_edge_tts(full_text, voice, speed)
+                audio, sr = await generate_edge_tts(
+                    full_text, voice, speed,
+                    stability=0.5, style_exaggeration=0.0,
+                )
             else:
                 audio, sr = engine.generate_long(
                     normalized, voice=voice, speed=speed

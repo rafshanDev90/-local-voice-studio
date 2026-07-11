@@ -3,6 +3,9 @@ import uuid
 from datetime import datetime
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
+from dotenv import load_dotenv
+
+load_dotenv()
 
 MONGO_URL = os.environ.get(
     "MONGO_URL",

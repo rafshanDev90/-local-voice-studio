@@ -21,3 +21,10 @@ node_modules/
 .cache/
 test_script.txt
 README_LOCAL.txt
+
+# Generated/volatile — prevents build context invalidation
+server/output/
+server/covers/
+server/models/
+server/__pycache__/
+server/tests/

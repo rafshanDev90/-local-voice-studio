@@ -12,7 +12,7 @@ from server.exceptions import TTSModelError, TTSGenerationError, TTSAudioError
 from server.tts_engine import TTSEngine, is_bangla_voice, is_edge_tts_voice, generate_edge_tts, detect_language
 from server.optimizer import optimize_script
 from server.audiobook import process_audiobook
-from server.database import connect, disconnect, save_voice_history, list_voice_history, get_voice_history_item, delete_voice_history
+from server.database import connect, disconnect, save_voice_history, list_voice_history, get_voice_history_item, delete_voice_history, get_db, DB_NAME
 
 logger = logging.getLogger("voice-agent")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -95,6 +95,16 @@ async def shutdown():
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/api/db/health")
+async def db_health():
+    try:
+        db = get_db()
+        await db.command("ping")
+        return {"status": "connected", "database": DB_NAME}
+    except Exception as e:
+        return JSONResponse(status_code=503, content={"status": "disconnected", "error": str(e)})
 
 
 @app.get("/api/voices")
@@ -183,7 +193,8 @@ async def generate_json(
             service=service,
             language=detected,
         )
-    except Exception:
+    except Exception as e:
+        logger.error("Failed to save voice history: %s", e)
         history_id = None
     return FileResponse(
         out_path,
@@ -238,7 +249,6 @@ async def generate_audiobook(
             language=detected,
         )
         if history_id:
-            from server.database import get_db
             from bson import ObjectId
             db = get_db()
             await db.voice_history.update_one(
@@ -246,8 +256,8 @@ async def generate_audiobook(
                 {"$set": {"chapters": chapters_json, "isAudiobook": True, "coverImage": None}},
             )
             headers["X-History-Id"] = history_id
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error("Failed to save audiobook history: %s", e)
 
     return FileResponse(
         out_path,
@@ -276,7 +286,6 @@ async def upload_audiobook_cover(history_id: str, file: UploadFile = File(...)):
     with open(cover_path, "wb") as f:
         f.write(contents)
     cover_url = f"/api/audiobook/{history_id}/cover"
-    from server.database import get_db
     from bson import ObjectId
     db = get_db()
     await db.voice_history.update_one(

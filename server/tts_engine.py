@@ -35,6 +35,8 @@ EDGE_TTS_ENGLISH_MALE_VOICES: dict[str, str] = {
 
 EDGE_TTS_VOICE_MAP: dict[str, str] = {**BANGLA_VOICE_MAP, **EDGE_TTS_ENGLISH_MALE_VOICES}
 
+
+
 EMOTION_PROFILES = {
     "excited": {"speed": 1.15, "volume": 1.3},
     "whisper": {"speed": 0.8, "volume": 0.35},
@@ -125,13 +127,36 @@ def apply_style_exaggeration(samples: np.ndarray, style_exaggeration: float) -> 
     return samples * gain.astype(samples.dtype)
 
 
+def _parse_edge_emotion(text: str) -> tuple[str, str]:
+    tags = re.findall(r'\[(\w+)\]', text)
+    clean = re.sub(r'\s*\[\/?\w+\]\s*', ' ', text).strip()
+    clean = re.sub(r'\s+', ' ', clean)
+    rate_mult = 1.0
+    for tag in tags:
+        tl = tag.lower()
+        if tl in EMOTION_PROFILES:
+            rate_mult *= EMOTION_PROFILES[tl]["speed"]
+    pct = int((rate_mult - 1) * 100)
+    rate_str = f"{pct:+d}%" if pct != 0 else "+0%"
+    return clean, rate_str
+
+
 async def generate_edge_tts(
     text: str, voice: str, speed: float = 1.0,
     stability: float = 0.5, style_exaggeration: float = 0.0,
+    volume: float = 1.0,
 ) -> tuple[np.ndarray, int]:
     voice_id = EDGE_TTS_VOICE_MAP.get(voice, voice)
-    rate = f"{int((speed - 1) * 100):+d}%"
-    communicate = edge_tts.Communicate(text, voice_id, rate=rate)
+
+    clean_text, emotion_rate = _parse_edge_emotion(text)
+    base_rate = int((speed - 1) * 100)
+    rate_parts = []
+    if base_rate != 0:
+        rate_parts.append(f"{base_rate:+d}%")
+    rate_parts.append(emotion_rate)
+    final_rate = " ".join(rate_parts) if rate_parts else "+0%"
+
+    communicate = edge_tts.Communicate(clean_text, voice_id, rate=final_rate)
     audio_bytes = b""
     try:
         async for chunk in communicate.stream():
@@ -152,6 +177,11 @@ async def generate_edge_tts(
         data = data.mean(axis=1)
     data = data.astype(np.float32)
     try:
+        if volume != 1.0:
+            peak = np.abs(data).max()
+            if peak > 0:
+                limit = min(volume, 0.95 / peak) if volume > 1.0 else volume
+                data = data * limit
         data = apply_stability(data, stability, int(sr))
         data = apply_style_exaggeration(data, style_exaggeration)
         data = normalize_volume(data)
