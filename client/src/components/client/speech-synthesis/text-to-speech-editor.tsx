@@ -21,6 +21,8 @@ import { useAudioConfig, type AudioFormat } from "~/stores/audio-config";
 import { FormatSelector } from "~/components/client/speech-synthesis/format-selector";
 import toast from "react-hot-toast";
 
+const MAX_CHARS = 5000;
+
 export function TextToSpeechEditor({
   service,
   credits,
@@ -197,11 +199,29 @@ export function TextToSpeechEditor({
       <div className="relative min-h-[160px] flex-1 px-3 py-3 md:px-5 md:py-4">
         <textarea
           value={textContent}
-          onChange={(e) => setTextContent(e.target.value)}
+          onChange={(e) => {
+            if (e.target.value.length <= MAX_CHARS) {
+              setTextContent(e.target.value);
+            }
+          }}
           placeholder={activePlaceholder}
           disabled={loading}
+          maxLength={MAX_CHARS}
           className="h-full min-h-[160px] w-full resize-none rounded-xl border border-gray-200 bg-white p-4 text-base leading-6 text-gray-950 shadow-sm outline-none transition placeholder:font-light placeholder:text-gray-400 focus:border-gray-300 focus:ring-4 focus:ring-gray-900/5 disabled:cursor-wait disabled:bg-gray-50 md:p-5"
         />
+        <div className="mt-1 flex justify-end">
+          <span
+            className={`text-xs ${
+              textContent.length > MAX_CHARS * 0.9
+                ? "text-red-500 font-medium"
+                : textContent.length > MAX_CHARS * 0.7
+                  ? "text-amber-500"
+                  : "text-gray-400"
+            }`}
+          >
+            {textContent.length} / {MAX_CHARS}
+          </span>
+        </div>
       </div>
 
       {/* Loading skeleton */}
@@ -289,7 +309,7 @@ export function TextToSpeechEditor({
             className="rounded-xl border border-gray-200 bg-gray-50 p-3"
             onGenerate={handleGenerate}
             isDisabled={
-              textContent.length > 5000 ||
+              textContent.length > MAX_CHARS ||
               textContent.trim().length === 0 ||
               loading
             }
@@ -298,7 +318,7 @@ export function TextToSpeechEditor({
             creditsRemaining={credits}
             showCredits={true}
             characterCount={textContent.length}
-            characterLimit={5000}
+            characterLimit={MAX_CHARS}
           />
         )}
       </div>

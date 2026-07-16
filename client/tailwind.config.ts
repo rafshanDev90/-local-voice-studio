@@ -54,6 +54,14 @@ export default {
           "0%, 100%": { opacity: "0.4" },
           "50%": { opacity: "1" },
         },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
+        "slide-up": {
+          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         waveform: "waveform 0.8s ease-in-out infinite",
@@ -61,6 +69,8 @@ export default {
         "fade-in": "fade-in 0.4s ease-out",
         "pulse-dot": "pulse-dot 1.4s ease-in-out infinite",
         wave: "wave 8s linear infinite",
+        float: "float 3s ease-in-out infinite",
+        "slide-up": "slide-up 0.5s ease-out",
       },
     },
   },

@@ -131,6 +131,8 @@ async def generate_voice(
     text = content.decode("utf-8").strip()
     if not text:
         raise HTTPException(400, "Script is empty")
+    if len(text) > 5000:
+        raise HTTPException(400, "Script exceeds maximum length of 5000 characters")
     _validate_language(voice_preset, language_code)
     segments = optimize_script(text)
     if is_edge_tts_voice(voice_preset):
@@ -160,6 +162,8 @@ async def generate_json(
 ):
     if not text.strip():
         raise HTTPException(400, "Text is empty")
+    if len(text) > 5000:
+        raise HTTPException(400, "Text exceeds maximum length of 5000 characters")
 
     lang = detect_language(text)
 
