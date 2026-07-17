@@ -5,12 +5,8 @@ import { HeroSection } from "~/components/client/rajshahi/hero-section";
 import { ProductShowcase } from "~/components/client/rajshahi/product-showcase";
 import { FeaturesGrid } from "~/components/client/rajshahi/features-grid";
 import { TechStack } from "~/components/client/rajshahi/tech-stack";
-import { useAudioStore } from "~/stores/audio-store";
-import Playbar from "~/components/client/playbar";
 
 export default function AppHomePage() {
-  const { currentAudio } = useAudioStore();
-
   return (
     <div className="flex h-screen">
       <div className="hidden lg:block">
@@ -40,12 +36,6 @@ export default function AppHomePage() {
           <FeaturesGrid />
           <TechStack />
         </main>
-
-        {currentAudio && (
-          <div className="flex-shrink-0">
-            <Playbar />
-          </div>
-        )}
       </div>
     </div>
   );

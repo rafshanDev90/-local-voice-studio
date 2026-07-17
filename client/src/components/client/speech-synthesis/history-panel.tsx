@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { IoDownloadOutline, IoPlay } from "react-icons/io5";
-import { HistoryItem as HistoryItemType, fetchHistory, getAudioUrl } from "~/lib/history";
+import { IoDownloadOutline, IoPlay, IoPause, IoTrashOutline } from "react-icons/io5";
+import { HistoryItem as HistoryItemType, fetchHistory, getAudioUrl, deleteHistoryItem } from "~/lib/history";
 import { useAudioStore } from "~/stores/audio-store";
 import { useVoiceStore, Voice } from "~/stores/voice-store";
 import { ServiceType } from "~/types/services";
@@ -20,7 +20,7 @@ export function HistoryPanel({
   hoveredItem: string | null;
   setHoveredItem: (id: string | null) => void;
 }) {
-  const { playAudio } = useAudioStore();
+  const { playAudio, currentAudio, isPlaying, togglePlayPause } = useAudioStore();
   const getVoices = useVoiceStore((state) => state.getVoices);
   const voices = getVoices(service);
   const [items, setItems] = useState<HistoryItemType[]>([]);
@@ -54,6 +54,18 @@ export function HistoryPanel({
     a.href = url;
     a.download = `${item.title || "voice"}.wav`;
     a.click();
+  };
+
+  const handleDelete = async (item: HistoryItemType) => {
+    if (!item.id) return;
+    const success = await deleteHistoryItem(item.id);
+    if (success) {
+      setItems((prev) => prev.filter((i) => i.id !== item.id));
+    }
+  };
+
+  const isItemPlaying = (item: HistoryItemType) => {
+    return currentAudio?.id === item.id && isPlaying;
   };
 
   return (
@@ -114,6 +126,9 @@ export function HistoryPanel({
                       setHoveredItem={setHoveredItem}
                       onPlay={handlePlayHistoryItem}
                       onDownload={handleDownload}
+                      onDelete={handleDelete}
+                      isPlaying={isItemPlaying(item)}
+                      onTogglePlayPause={togglePlayPause}
                     />
                   ))}
                 </div>
@@ -141,6 +156,9 @@ function HistoryItemComponent({
   setHoveredItem,
   onPlay,
   onDownload,
+  onDelete,
+  isPlaying,
+  onTogglePlayPause,
 }: {
   item: HistoryItemType;
   voices: Voice[];
@@ -148,9 +166,20 @@ function HistoryItemComponent({
   setHoveredItem: (id: string | null) => void;
   onPlay: (item: HistoryItemType) => void;
   onDownload: (item: HistoryItemType) => void;
+  onDelete: (item: HistoryItemType) => void;
+  isPlaying: boolean;
+  onTogglePlayPause: () => void;
 }) {
   const voiceUsed =
     voices.find((voice) => voice.id === item.voice) || voices[0];
+
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      onTogglePlayPause();
+    } else {
+      onPlay(item);
+    }
+  };
 
   return (
     <div
@@ -164,16 +193,29 @@ function HistoryItemComponent({
           {hoveredItem === item.id && (
             <div className="absolute right-0 top-0 flex items-center gap-1 bg-gray-100 pl-2">
               <button
-                onClick={() => onPlay(item)}
+                onClick={handlePlayPause}
                 className="rounded-full p-1 hover:bg-gray-200"
+                title={isPlaying ? "Pause" : "Play"}
               >
-                <IoPlay className="h-5 w-5" />
+                {isPlaying ? (
+                  <IoPause className="h-5 w-5" />
+                ) : (
+                  <IoPlay className="h-5 w-5" />
+                )}
               </button>
               <button
                 onClick={() => onDownload(item)}
                 className="rounded-full p-1 hover:bg-gray-200"
+                title="Download"
               >
                 <IoDownloadOutline className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => onDelete(item)}
+                className="rounded-full p-1 text-red-500 hover:bg-red-100"
+                title="Delete"
+              >
+                <IoTrashOutline className="h-5 w-5" />
               </button>
             </div>
           )}
