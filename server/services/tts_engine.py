@@ -10,7 +10,7 @@ import edge_tts
 import numpy as np
 import soundfile as sf
 from kokoro_onnx import Kokoro
-from server.exceptions import TTSModelError, TTSGenerationError, TTSAudioError
+from server.models.exceptions import TTSModelError, TTSGenerationError, TTSAudioError
 
 logger = logging.getLogger("voice-agent")
 
@@ -192,7 +192,7 @@ async def generate_edge_tts(
 
 
 class TTSEngine:
-    def __init__(self, model_path: str = "server/models/kokoro-v0_19.onnx", voices_path: str = "server/models/voices.bin"):
+    def __init__(self, model_path: str = "server/model_weights/kokoro-v0_19.onnx", voices_path: str = "server/model_weights/voices.bin"):
         try:
             self.kokoro = Kokoro(model_path, voices_path)
         except Exception as e:

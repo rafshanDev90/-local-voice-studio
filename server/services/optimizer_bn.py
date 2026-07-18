@@ -22,7 +22,7 @@ def optimize_bangla(
     raw_response = call_llm(text, prompt=SEGMENTATION_PROMPT_BN)
 
     if raw_response:
-        from server.optimizer import validate_segments
+        from server.services.optimizer import validate_segments
         raw_segments = [s.strip() for s in raw_response.split("---") if s.strip()]
         validated = validate_segments(raw_segments)
         if validated:

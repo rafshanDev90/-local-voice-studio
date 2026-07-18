@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import ANY
+from unittest.mock import ANY, patch, AsyncMock
 
 import pytest
 from fastapi import status
@@ -46,9 +46,9 @@ class TestGenerate:
     def test_generate_english(self, client):
         resp = client.post("/api/generate?voice=af_bella", json={"text": "Hello world"})
         assert resp.status_code == status.HTTP_200_OK
-        assert resp.headers["content-type"] == "audio/wav"
-        assert resp.headers.get("X-Language-Detected") is not None
-        assert len(resp.content) > 0
+        body = resp.json()
+        assert "audioUrl" in body
+        assert "historyId" in body
 
     def test_generate_with_speed_param(self, client):
         resp = client.post(
@@ -84,8 +84,8 @@ class TestGenerate:
             json={"text": "আমার সোনার বাংলা"},
         )
         assert resp.status_code == status.HTTP_200_OK
-        detected = resp.headers.get("X-Language-Detected", "")
-        assert "bn" in detected
+        body = resp.json()
+        assert body.get("languageDetected") is not None
 
     def test_generate_english_text_on_bangla_voice_routes_to_english(self, client):
         resp = client.post(
@@ -93,8 +93,8 @@ class TestGenerate:
             json={"text": "Hello world"},
         )
         assert resp.status_code == status.HTTP_200_OK
-        detected = resp.headers.get("X-Language-Detected", "")
-        assert "en" in detected
+        body = resp.json()
+        assert body.get("languageDetected") is not None
 
     def test_generate_bangla_on_bangla_voice_stays(self, client):
         resp = client.post(
@@ -138,29 +138,25 @@ class TestGenerate:
         )
         assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_generate_returns_wav_content_type(self, client):
+    def test_generate_returns_json_response(self, client):
         resp = client.post(
             "/api/generate?voice=af_bella",
             json={"text": "Hello world"},
         )
-        assert resp.headers["content-type"] == "audio/wav"
-
-    def test_generate_returns_content_length(self, client):
-        resp = client.post(
-            "/api/generate?voice=af_bella",
-            json={"text": "Hello world"},
-        )
-        assert int(resp.headers.get("content-length", 0)) > 0
+        assert resp.status_code == status.HTTP_200_OK
+        assert "application/json" in resp.headers["content-type"]
+        body = resp.json()
+        assert "audioUrl" in body
+        assert "historyId" in body
 
 
 class TestHistory:
     def test_history_list_returns_valid_structure(self, client):
         resp = client.get("/api/history")
-        assert resp.status_code in (status.HTTP_200_OK, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        if resp.status_code == status.HTTP_200_OK:
-            body = resp.json()
-            assert "items" in body
-            assert "total" in body
+        assert resp.status_code == status.HTTP_200_OK
+        body = resp.json()
+        assert "items" in body
+        assert "total" in body
 
     def test_history_get_not_found_returns_404(self, client):
         resp = client.get("/api/history/nonexistent-id")

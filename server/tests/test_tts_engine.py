@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from server.tts_engine import (
+from server.services.tts_engine import (
     BANGLA_VOICE_MAP,
     DEFAULT_SAMPLE_RATE,
     TARGET_RMS,

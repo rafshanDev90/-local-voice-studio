@@ -6,9 +6,9 @@ from typing import Any
 
 import numpy as np
 
-from server.pronunciation import normalize_technical_text, enhance_prosody, contains_bangla
-from server.optimizer import split_into_sentences
-from server.tts_engine import is_edge_tts_voice, generate_edge_tts
+from server.services.pronunciation import normalize_technical_text, enhance_prosody, contains_bangla
+from server.services.optimizer import split_into_sentences
+from server.services.tts_engine import is_edge_tts_voice, generate_edge_tts
 
 # Chapter detection patterns — English
 CHAPTER_PATTERNS = [

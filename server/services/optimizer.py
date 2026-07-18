@@ -223,8 +223,8 @@ def call_llm_with_fallback(text: str, prompt: str = "") -> str | None:
 
 
 def optimize_script(text: str) -> list[str]:
-    from server.optimizer_en import optimize_english
-    from server.optimizer_bn import optimize_bangla
+    from server.services.optimizer_en import optimize_english
+    from server.services.optimizer_bn import optimize_bangla
 
     if contains_bangla(text):
         return optimize_bangla(text, call_llm_with_fallback, split_into_sentences)
