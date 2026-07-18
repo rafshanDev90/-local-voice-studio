@@ -8,9 +8,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 MONGO_URL = os.environ.get(
-    "MONGO_URL",
-    "mongodb://AmzAdmin:SuperAdmin123@5.189.147.108:27017/test?authSource=admin&retryWrites=true&w=majority&directConnection=true",
+    "MONGO_URL"
 )
+if not MONGO_URL:
+    raise ValueError("Environment variable 'MONGO_URL' is not set")
+
 DB_NAME = os.environ.get("MONGO_DB_NAME", "voice_agent")
 
 client: AsyncIOMotorClient | None = None

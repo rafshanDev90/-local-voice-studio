@@ -27,6 +27,10 @@ const config = {
         destination: `${BACKEND}/api/audiobook`,
       },
       {
+        source: "/api/audiobook/:path*",
+        destination: `${BACKEND}/api/audiobook/:path*`,
+      },
+      {
         source: "/api/history",
         destination: `${BACKEND}/api/history`,
       },

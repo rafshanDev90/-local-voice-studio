@@ -11,8 +11,6 @@ export interface AudiobookResult {
   historyId?: string;
 }
 
-const BACKEND = "http://127.0.0.1:8000";
-
 export async function generateAudiobook(
   text: string,
   voice: string,
@@ -20,7 +18,7 @@ export async function generateAudiobook(
   format: string = "mp3",
 ): Promise<AudiobookResult> {
   const params = new URLSearchParams({ voice, speed: String(speed), format });
-  const res = await fetch(`${BACKEND}/api/audiobook?${params}`, {
+  const res = await fetch(`/api/audiobook?${params}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text }),
@@ -42,7 +40,7 @@ export async function generateAudiobook(
 }
 
 export async function deleteAudiobook(id: string): Promise<boolean> {
-  const res = await fetch(`${BACKEND}/api/history/${id}`, { method: "DELETE" });
+  const res = await fetch(`/api/history/${id}`, { method: "DELETE" });
   return res.ok;
 }
 
@@ -52,7 +50,7 @@ export async function uploadCover(
 ): Promise<string> {
   const form = new FormData();
   form.append("file", file);
-  const res = await fetch(`${BACKEND}/api/audiobook/${id}/cover`, {
+  const res = await fetch(`/api/audiobook/${id}/cover`, {
     method: "POST",
     body: form,
   });
@@ -62,5 +60,5 @@ export async function uploadCover(
 }
 
 export function getCoverUrl(id: string): string {
-  return `${BACKEND}/api/audiobook/${id}/cover`;
+  return `/api/audiobook/${id}/cover`;
 }
