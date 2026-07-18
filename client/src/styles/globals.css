@@ -6,3 +6,7 @@
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
+
+.generating-progress-bar {
+  animation: generating-fill 3s ease-in-out infinite;
+}

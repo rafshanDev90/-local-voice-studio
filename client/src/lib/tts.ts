@@ -89,14 +89,25 @@ export async function generateSpeech({
     throw new Error(err.detail ?? `Generation failed (${res.status})`);
   }
 
-  const languageDetected = res.headers.get("X-Language-Detected");
-  const historyId = res.headers.get("X-History-Id") || null;
-  const arrayBuffer = await res.arrayBuffer();
+  const data = await res.json();
+  const audioEndpoint: string | null = data.audioUrl ?? null;
+  const historyId: string | null = data.historyId ?? null;
+  const languageDetected: string | null = data.languageDetected ?? null;
+
+  if (!audioEndpoint) {
+    throw new Error("Generation succeeded but no audio URL was returned");
+  }
+
+  const audioRes = await fetch(audioEndpoint);
+  if (!audioRes.ok) {
+    throw new Error(`Failed to fetch audio file (${audioRes.status})`);
+  }
+  const arrayBuffer = await audioRes.arrayBuffer();
   const mimeType = MIME_MAP[format] ?? "audio/wav";
   const blob = new Blob([arrayBuffer], { type: mimeType });
-  const audioUrl = URL.createObjectURL(blob);
+  const blobUrl = URL.createObjectURL(blob);
 
-  return { audioUrl, blob, languageDetected, historyId };
+  return { audioUrl: blobUrl, blob, languageDetected, historyId };
 }
 
 export function revokeAudioUrl(audioUrl: string | null | undefined): void {

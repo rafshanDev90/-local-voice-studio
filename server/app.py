@@ -1,9 +1,7 @@
 import logging
 import os
-import traceback
 import uuid
 
-import soundfile as sf
 from fastapi import FastAPI, Request, UploadFile, File, Query, Body, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,7 +26,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Language-Detected"],
+    expose_headers=["X-Language-Detected", "X-History-Id"],
 )
 
 @app.exception_handler(Exception)
@@ -143,8 +141,30 @@ async def generate_voice(
     else:
         audio, sample_rate = engine.generate_long(segments, voice=voice_preset, speed=speed, stability=stability, style_exaggeration=style_exaggeration)
     fmt_info = FORMATS[format]
-    out = write_audio(OUTPUT_DIR, uuid.uuid4().hex, audio, sample_rate, format)
-    return FileResponse(out, media_type=fmt_info["mime"], filename=f"output{fmt_info['ext']}")
+    out_stem = uuid.uuid4().hex
+    out_path = write_audio(OUTPUT_DIR, out_stem, audio, sample_rate, format)
+    out_name = os.path.basename(out_path)
+    try:
+        voice_name = next((v["name"] for v in VOICES_CATALOG if v["id"] == voice_preset), voice_preset)
+        detected = VOICE_LANG_MAP.get(voice_preset, "en-us")
+        history_id = await save_voice_history(
+            user_id=None,
+            text=text,
+            voice_id=voice_preset,
+            voice_name=voice_name,
+            audio_path=out_name,
+            service="styletts2",
+            language=detected,
+        )
+    except Exception as e:
+        logger.error("Failed to save history: %s", e)
+        history_id = None
+    return JSONResponse(
+        content={
+            "audioUrl": f"/api/audio/{history_id}" if history_id else None,
+            "historyId": str(history_id) if history_id else None,
+        },
+    )
 
 
 @app.post("/api/generate")
@@ -200,13 +220,11 @@ async def generate_json(
     except Exception as e:
         logger.error("Failed to save voice history: %s", e)
         history_id = None
-    return FileResponse(
-        out_path,
-        media_type=fmt_info["mime"],
-        filename=f"output{fmt_info['ext']}",
-        headers={
-            "X-Language-Detected": detected,
-            "X-History-Id": str(history_id) if history_id else "",
+    return JSONResponse(
+        content={
+            "audioUrl": f"/api/audio/{history_id}" if history_id else None,
+            "historyId": str(history_id) if history_id else None,
+            "languageDetected": detected,
         },
     )
 
@@ -263,11 +281,12 @@ async def generate_audiobook(
     except Exception as e:
         logger.error("Failed to save audiobook history: %s", e)
 
-    return FileResponse(
-        out_path,
-        media_type=fmt_info["mime"],
-        filename=f"audiobook{fmt_info['ext']}",
-        headers=headers,
+    return JSONResponse(
+        content={
+            "audioUrl": f"/api/audio/{history_id}" if history_id else None,
+            "historyId": history_id,
+            "chapters": chapters,
+        },
     )
 
 
@@ -347,7 +366,9 @@ async def serve_audio(history_id: str):
     audio_path = os.path.join(OUTPUT_DIR, item["audioPath"])
     if not os.path.exists(audio_path):
         raise HTTPException(404, "Audio file not found")
-    return FileResponse(audio_path, media_type="audio/wav", filename="output.wav")
+    ext = os.path.splitext(audio_path)[1].lower().lstrip(".")
+    mime = FORMATS.get(ext, {}).get("mime", "application/octet-stream")
+    return FileResponse(audio_path, media_type=mime)
 
 
 def language_code_to_voice(language_code: str | None) -> str | None:

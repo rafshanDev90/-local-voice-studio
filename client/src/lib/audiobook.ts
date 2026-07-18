@@ -29,11 +29,20 @@ export async function generateAudiobook(
     throw new Error(err.detail ?? `Generation failed (${res.status})`);
   }
 
-  const chaptersHeader = res.headers.get("X-Chapters");
-  const chapters: Chapter[] = chaptersHeader ? JSON.parse(chaptersHeader) : [];
-  const historyId = res.headers.get("X-History-Id") ?? undefined;
+  const data = await res.json();
+  const chapters: Chapter[] = data.chapters ?? [];
+  const historyId: string | undefined = data.historyId ?? undefined;
+  const audioEndpoint: string | null = data.audioUrl ?? null;
 
-  const blob = await res.blob();
+  if (!audioEndpoint) {
+    throw new Error("Audiobook generation succeeded but no audio URL was returned");
+  }
+
+  const audioRes = await fetch(audioEndpoint);
+  if (!audioRes.ok) {
+    throw new Error(`Failed to fetch audiobook audio (${audioRes.status})`);
+  }
+  const blob = await audioRes.blob();
   const audioUrl = URL.createObjectURL(blob);
 
   return { audioUrl, blob, chapters, historyId };

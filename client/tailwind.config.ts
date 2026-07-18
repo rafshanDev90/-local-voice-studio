@@ -62,6 +62,11 @@ export default {
           "0%": { opacity: "0", transform: "translateY(20px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "generating-fill": {
+          "0%": { width: "0%" },
+          "50%": { width: "80%" },
+          "100%": { width: "100%" },
+        },
       },
       animation: {
         waveform: "waveform 0.8s ease-in-out infinite",
@@ -71,6 +76,7 @@ export default {
         wave: "wave 8s linear infinite",
         float: "float 3s ease-in-out infinite",
         "slide-up": "slide-up 0.5s ease-out",
+        "generating-fill": "generating-fill 3s ease-in-out infinite",
       },
     },
   },

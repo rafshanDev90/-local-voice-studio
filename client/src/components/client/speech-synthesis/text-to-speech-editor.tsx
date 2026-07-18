@@ -11,14 +11,14 @@ import {
   IoMicOutline,
   IoLeafOutline,
 } from "react-icons/io5";
-import { GoDownload } from "react-icons/go";
 import { ServiceType } from "~/types/services";
 import { GenerateButton } from "../generate-button";
 import { generateSpeech, LanguageMismatchError, revokeAudioUrl } from "~/lib/tts";
 import { useVoiceStore, LANGUAGES } from "~/stores/voice-store";
-import { useAudioStore } from "~/stores/audio-store";
-import { useAudioConfig, type AudioFormat } from "~/stores/audio-config";
+import { useAudioConfig } from "~/stores/audio-config";
 import { FormatSelector } from "~/components/client/speech-synthesis/format-selector";
+import { GeneratingLoader } from "~/components/client/speech-synthesis/generating-loader";
+import { AudioPlayer } from "~/components/client/speech-synthesis/audio-player";
 import toast from "react-hot-toast";
 
 const MAX_CHARS = 5000;
@@ -37,22 +37,19 @@ export function TextToSpeechEditor({
   const [loading, setLoading] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const selectedLanguage = useVoiceStore((s) => s.selectedLanguage);
   const setSelectedLanguage = useVoiceStore((s) => s.setSelectedLanguage);
   const selectedVoice = useVoiceStore((s) => s.selectedVoices[service]);
   const getVoices = useVoiceStore((s) => s.getVoices);
 
-  const { playAudio } = useAudioStore();
   const { speed, stability, styleExaggeration, format } = useAudioConfig();
 
   const availableVoices = getVoices(service, selectedLanguage);
 
   const blobUrlRef = useRef<string | null>(null);
 
-  // Hide inline player when text changes (don't revoke blob URL —
-  // Playbar may still reference it via zustand store)
+  // Hide inline player when text changes
   useEffect(() => {
     setAudioBlob(null);
     setAudioUrl(null);
@@ -130,19 +127,6 @@ export function TextToSpeechEditor({
         const lang = LANGUAGES.find((l) => l.code === result.languageDetected);
         if (lang) toast.success(`Language: ${lang.label}`);
       }
-
-      playAudio({
-        id: Date.now().toString(),
-        title:
-          textContent.substring(0, 50) +
-          (textContent.length > 50 ? "..." : ""),
-        audioUrl: result.audioUrl,
-        voice: selectedVoice.name,
-        duration: "0:30",
-        progress: 0,
-        service,
-        createdAt: new Date().toLocaleDateString(),
-      });
     } catch (err) {
       revokeAudioUrl(blobUrlRef.current);
       blobUrlRef.current = null;
@@ -225,41 +209,15 @@ export function TextToSpeechEditor({
       </div>
 
       {/* Loading skeleton */}
-      {loading && !audioUrl && (
-        <div className="mx-3 mb-3 overflow-hidden rounded-xl border border-gray-200 bg-white p-3 shadow-sm md:mx-5 md:mb-5">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <div className="flex min-w-0 flex-1 items-center gap-3">
-              <div className="h-10 w-10 flex-shrink-0 rounded-lg bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer" />
-              <div className="h-9 flex-1 rounded-lg bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer" />
-            </div>
-            <div className="h-10 w-full rounded-lg bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer md:w-10" />
-          </div>
-        </div>
-      )}
+      {loading && !audioUrl && <GeneratingLoader />}
 
       {/* Generated audio player */}
       {audioUrl && (
-        <div className="mx-3 mb-3 animate-fade-in flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm md:mx-5 md:mb-5 md:flex-row md:items-center">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-950 text-white">
-              <IoMicOutline className="h-4 w-4" />
-            </div>
-            <audio
-              ref={audioRef}
-              src={audioUrl}
-              controls
-              className="h-9 min-w-0 flex-1"
-            />
-          </div>
-          <button
-            onClick={handleDownload}
-            className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 md:w-10 md:px-0"
-            title="Download WAV"
-          >
-            <GoDownload className="h-4 w-4" />
-            <span className="md:hidden">Download</span>
-          </button>
-        </div>
+        <AudioPlayer
+          audioUrl={audioUrl}
+          title={textContent.substring(0, 50) + (textContent.length > 50 ? "..." : "")}
+          onDownload={handleDownload}
+        />
       )}
 
       <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-2 md:px-5">
