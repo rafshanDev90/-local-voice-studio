@@ -25,7 +25,7 @@ export function HeroSection() {
               key={i}
               className="w-1 bg-brand-maroon"
               style={{
-                height: `${Math.random() * 60 + 20}%`,
+                height: `${((i * 7 + 13) % 60) + 20}%`,
                 animationDelay: `${i * 0.05}s`,
               }}
             />
