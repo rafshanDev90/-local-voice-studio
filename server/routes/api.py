@@ -11,6 +11,7 @@ from server.controllers import generate as generate_ctrl
 from server.controllers import health as health_ctrl
 from server.controllers import history as history_ctrl
 from server.controllers import voice as voice_ctrl
+from server.controllers import voice_cleaner as voice_cleaner_ctrl
 from server.repositories.voice_history import VoiceHistoryRepository
 
 api_router = APIRouter()
@@ -113,6 +114,20 @@ async def serve_audiobook_cover(history_id: str):
     ext = os.path.splitext(path)[1].lower().lstrip(".")
     media = f"image/{'jpeg' if ext in ('jpg', 'jpeg') else ext}"
     return FileResponse(path, media_type=media)
+
+
+# ── Voice Cleaner ─────────────────────────────────────────────────────────────
+
+
+@api_router.post("/api/voice-cleaner")
+async def clean_voice(
+    file: UploadFile = File(...),
+    output_format: str = Query("wav", pattern="^(wav|mp3|ogg|flac)$"),
+    prop_decrease: float = Query(0.8, ge=0.0, le=1.0),
+):
+    return await voice_cleaner_ctrl.clean(
+        file=file, output_format=output_format, prop_decrease=prop_decrease,
+    )
 
 
 # ── Audio ─────────────────────────────────────────────────────────────────────

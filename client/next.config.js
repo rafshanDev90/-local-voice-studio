@@ -42,6 +42,10 @@ const config = {
         source: "/api/audio/:path*",
         destination: `${BACKEND}/api/audio/:path*`,
       },
+      {
+        source: "/api/voice-cleaner",
+        destination: `${BACKEND}/api/voice-cleaner`,
+      },
     ];
   },
 };

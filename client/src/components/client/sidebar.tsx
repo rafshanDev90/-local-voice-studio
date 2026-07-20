@@ -8,6 +8,7 @@ import {
   IoBookOutline,
   IoChatboxOutline,
   IoHomeOutline,
+  IoMicOffOutline,
   IoMicOutline,
   IoMusicalNotesOutline,
   IoPersonOutline,
@@ -102,6 +103,14 @@ export default function Sidebar({ isMobile = false }: { isMobile?: boolean }) {
           href="/app/audiobook"
         >
           Audiobook
+        </SidebarButton>
+        <SidebarButton
+          icon={<IoMicOffOutline />}
+          isExpanded={isExpanded}
+          isActive={pathname.includes("/app/voice-cleaner")}
+          href="/app/voice-cleaner"
+        >
+          Voice Cleaner
         </SidebarButton>
     
       </nav>
